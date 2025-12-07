@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UFL Christmas Spinner 🎄</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="spinner-page">
+    <!-- Login Section -->
+    <div id="loginSection" class="login-container">
+        <div class="logo-overlay"></div>
+        <div class="login-card">
+            <h1 class="christmas-title">🎄 UFL Christmas Secret Santa 🎅</h1>
+            <p class="christmas-subtitle">Season's Greetings! Let's find out who you'll gift! 🎁</p>
+            
+            <div class="form-group">
+                <label for="nameInput">Your Full Name</label>
+                <input type="text" id="nameInput" placeholder="Start typing your name..." autocomplete="off">
+                <div id="nameSuggestions" class="suggestions"></div>
+            </div>
+            
+            <div class="form-group">
+                <label for="departmentSelect">Your Department</label>
+                <select id="departmentSelect">
+                    <option value="">Select your department</option>
+                </select>
+            </div>
+            
+            <button id="loginBtn" class="btn-primary">Let's Go! 🎉</button>
+            <p class="error-message" id="loginError"></p>
+        </div>
+    </div>
+
+    <!-- Ready Overlay -->
+    <div id="readyOverlay" class="overlay hidden">
+        <div class="ready-card">
+            <h2 class="pulse-text">🎅 Are You Ready to Spin? 🎄</h2>
+            <p class="ready-subtitle">Once you spin, there's no going back!</p>
+            <button id="readyBtn" class="btn-primary btn-large">Yes, I'm Ready! 🎁</button>
+        </div>
+    </div>
+
+    <!-- Spinner Section -->
+    <div id="spinnerSection" class="spinner-container hidden">
+        <h1 class="spinner-header">🎄 Spin the Christmas Wheel! 🎅</h1>
+        <p class="spinner-intro" id="welcomeText"></p>
+        
+        <div class="spinner-wrapper">
+            <div id="spinner" class="spinner">
+                <div class="spinner-center">
+                    <div class="spinner-button">SPIN</div>
+                </div>
+                <div class="spinner-wheel"></div>
+            </div>
+            <div class="spinner-arrow">▼</div>
+        </div>
+
+        <p id="statusText" class="status-text"></p>
+        <p id="anticipateText" class="anticipate-text hidden"></p>
+    </div>
+
+    <!-- Result Overlay -->
+    <div id="resultOverlay" class="overlay hidden">
+        <div class="result-card">
+            <div class="confetti-container">
+                <div class="confetti"></div>
+                <div class="confetti"></div>
+                <div class="confetti"></div>
+                <div class="confetti"></div>
+                <div class="confetti"></div>
+            </div>
+            <h2 class="result-title">🎉 Hurray! 🎉</h2>
+            <p class="result-text">You have spun:</p>
+            <h1 class="result-name" id="resultName"></h1>
+            <p class="result-reminder">🎁 Kindly Screenshot this and don't forget to prepare your gift! 🎁</p>
+            <button id="logoutBtn" class="btn-primary">Log Out</button>
+        </div>
+    </div>
+
+    <script src="spinner.js"></script>
+</body>
+</html>

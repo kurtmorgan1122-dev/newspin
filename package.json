@@ -1,0 +1,25 @@
+{
+  "name": "ufl-christmas-spinner",
+  "version": "1.0.0",
+  "description": "UFL Christmas Secret Santa Spinner",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "mongoose": "^7.6.3",
+    "multer": "^2.0.2",
+    "socket.io": "^4.7.2",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+    "engines": {
+    "node": "18.x"
+  }
+}

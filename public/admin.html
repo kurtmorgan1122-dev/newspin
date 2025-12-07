@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Portal - UFL Christmas Spinner</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="admin-page">
+    <div class="admin-container">
+        <header class="admin-header">
+            <h1>🎄 UFL Christmas Secret Santa - Admin Portal 🎅</h1>
+        </header>
+
+        <!-- Stats Section -->
+        <div class="stats-container">
+            <div class="stat-card">
+                <h3>Total Staff</h3>
+                <p class="stat-number" id="totalStaff">0</p>
+            </div>
+            <div class="stat-card">
+                <h3>Spins Completed</h3>
+                <p class="stat-number" id="spunCount">0</p>
+            </div>
+            <div class="stat-card">
+                <h3>Gifts Shared</h3>
+                <p class="stat-number" id="giftsShared">0</p>
+            </div>
+            <div class="stat-card">
+                <h3>Remaining</h3>
+                <p class="stat-number" id="remaining">0</p>
+            </div>
+        </div>
+
+        <!-- Upload Section -->
+        <div class="upload-section">
+            <div class="section-header" onclick="toggleUploadSection()">
+                <h2>📤 Upload Staff Data</h2>
+                <span class="collapse-icon" id="uploadCollapseIcon">▼</span>
+            </div>
+            <div class="upload-content" id="uploadContent">
+            <div class="upload-grid">
+                <div class="upload-card">
+                    <h3>Dairies Plant Staff</h3>
+                    <input type="file" id="dairiesFile" accept=".xlsx,.xls" class="file-input">
+                    <button onclick="uploadFile('dairies')" class="btn-upload">Upload Dairies</button>
+                </div>
+                <div class="upload-card">
+                    <h3>Swan Plant Staff</h3>
+                    <input type="file" id="swanFile" accept=".xlsx,.xls" class="file-input">
+                    <button onclick="uploadFile('swan')" class="btn-upload">Upload Swan</button>
+                </div>
+                <div class="upload-card">
+                    <h3>Snacks Plant Group 1</h3>
+                    <input type="file" id="snacks1File" accept=".xlsx,.xls" class="file-input">
+                    <button onclick="uploadFile('snacks1')" class="btn-upload">Upload Snacks 1</button>
+                </div>
+                <div class="upload-card">
+                    <h3>Snacks Plant Group 2</h3>
+                    <input type="file" id="snacks2File" accept=".xlsx,.xls" class="file-input">
+                    <button onclick="uploadFile('snacks2')" class="btn-upload">Upload Snacks 2</button>
+                </div>
+            </div>
+            <p id="uploadMessage" class="upload-message"></p>
+            </div>
+        </div>
+
+        <!-- Staff Table Section -->
+        <div class="table-section">
+            <h2>📋 Spin Records</h2>
+            <div class="table-container">
+                <table class="staff-table">
+                    <thead>
+                        <tr>
+                            <th>S/N</th>
+                            <th>Name of Spinner</th>
+                            <th>Name Spun</th>
+                            <th>Group</th>
+                            <th>Gift Shared Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="staffTableBody">
+                        <tr>
+                            <td colspan="6" class="no-data">No spin records yet</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <div class="pagination">
+                <button id="prevBtn" class="pagination-btn" onclick="changePage(-1)">Previous</button>
+                <span id="pageInfo" class="page-info">Page 1 of 1</span>
+                <button id="nextBtn" class="pagination-btn" onclick="changePage(1)">Next</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        // Ensure socket.io client is available for admin real-time updates
+        try { window.__io = io(); } catch (e) { console.warn('Socket.IO client not available'); }
+    </script>
+    <script src="admin.js"></script>
+</body>
+</html>
