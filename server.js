@@ -40,6 +40,7 @@ if (!mongoUrl) {
   process.exit(1);
 }
 
+
 mongoose.connect(mongoUrl, {
   useNewUrlParser: true,
   useUnifiedTopology: true
