@@ -33,7 +33,7 @@ io.on('connection', (socket) => {
 });
 
 // MongoDB Connection
-const mongoUrl = process.env.MONGODB_URL || 'mongodb+srv://AyeniEHR:olabisi123@ehr.trweh5j.mongodb.net/spinner';
+const mongoUrl = process.env.MONGODB_URL;
 
 mongoose.connect(mongoUrl, {
   useNewUrlParser: true,
