@@ -59,6 +59,7 @@ mongoose.connection.on('error', (err) => {
 
 // Staff Schema
 const staffSchema = new mongoose.Schema({
+  employeeId: { type: String, required: true, unique: true }, // New field
   name: { type: String, required: true, uppercase: true },
   department: { type: String, required: true },
   group: { type: String, required: true }, // dairies, swan, snacks1, snacks2
@@ -85,6 +86,12 @@ app.post('/api/upload/:group', upload.single('file'), async (req, res) => {
 
     const staffData = data.map(row => {
       // Try different possible column names for flexibility
+      const employeeIdValue = row['Employee ID'] || 
+                              row['EmployeeID'] || 
+                              row['employee_id'] ||
+                              row['ID'] ||
+                              row['ID Number'];
+      
       const nameValue = row['Name (Surname First)'] || 
                         row['Name'] || 
                         row['NAME'] || 
@@ -97,12 +104,13 @@ app.post('/api/upload/:group', upload.single('file'), async (req, res) => {
                         row['department'] ||
                         row['Dept'];
 
-      if (!nameValue || !deptValue) {
+      if (!employeeIdValue || !nameValue || !deptValue) {
         console.log('Missing data in row:', row);
         return null;
       }
 
       return {
+        employeeId: String(employeeIdValue).trim(),
         name: String(nameValue).toUpperCase().trim(),
         department: String(deptValue).trim(),
         group: group
@@ -112,9 +120,9 @@ app.post('/api/upload/:group', upload.single('file'), async (req, res) => {
     // Remove duplicates and insert
     let successCount = 0;
     for (const staff of staffData) {
-      if (staff && staff.name && staff.department) {
+      if (staff && staff.employeeId && staff.name && staff.department) {
         await Staff.findOneAndUpdate(
-          { name: staff.name, department: staff.department },
+          { employeeId: staff.employeeId },
           staff,
           { upsert: true, new: true }
         );
@@ -128,17 +136,34 @@ app.post('/api/upload/:group', upload.single('file'), async (req, res) => {
   }
 });
 
+// Lookup employee by ID to auto-fill name and department
+app.get('/api/lookup-employee/:employeeId', async (req, res) => {
+  try {
+    const { employeeId } = req.params;
+    const staff = await Staff.findOne({ employeeId: employeeId.trim() });
+
+    if (!staff) {
+      return res.status(404).json({ success: false, message: 'Employee ID not found' });
+    }
+
+    res.json({ 
+      success: true, 
+      name: staff.name, 
+      department: staff.department 
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 // Login endpoint
 app.post('/api/login', async (req, res) => {
   try {
-    const { name, department } = req.body;
-    const staff = await Staff.findOne({ 
-      name: name.toUpperCase().trim(), 
-      department: department 
-    });
+    const { employeeId } = req.body;
+    const staff = await Staff.findOne({ employeeId: employeeId.trim() });
 
     if (!staff) {
-      return res.status(404).json({ success: false, message: 'Staff not found in this department' });
+      return res.status(404).json({ success: false, message: 'Employee ID not found' });
     }
 
     if (staff.hasSpun) {
@@ -168,6 +193,45 @@ app.get('/api/departments', async (req, res) => {
   try {
     const departments = await Staff.distinct('department');
     res.json({ success: true, departments });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Generate one-time ID for staff without Employee ID
+app.post('/api/admin/generate-id', async (req, res) => {
+  try {
+    const { name, department, group } = req.body;
+
+    if (!name || !department || !group) {
+      return res.status(400).json({ success: false, message: 'Name, department, and group are required' });
+    }
+
+    // Generate an 8-digit numeric one-time ID and ensure uniqueness
+    let oneTimeId;
+    // Create a numeric ID in range [10000000, 99999999]
+    do {
+      oneTimeId = (Math.floor(10000000 + Math.random() * 90000000)).toString();
+    } while (await Staff.findOne({ employeeId: oneTimeId }));
+
+    // Create or update staff with the generated ID
+    const staff = await Staff.findOneAndUpdate(
+      { name: name.toUpperCase().trim(), department: department.trim() },
+      {
+        name: name.toUpperCase().trim(),
+        department: department.trim(),
+        group: group,
+        employeeId: oneTimeId
+      },
+      { upsert: true, new: true }
+    );
+
+    res.json({ 
+      success: true, 
+      message: 'One-time ID generated successfully',
+      oneTimeId: oneTimeId,
+      staff: staff
+    });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

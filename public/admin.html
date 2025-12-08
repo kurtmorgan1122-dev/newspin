@@ -32,36 +32,72 @@
             </div>
         </div>
 
-        <!-- Upload Section -->
+        <!-- Upload Staff Data & Generate One-Time ID Section -->
         <div class="upload-section">
-            <div class="section-header" onclick="toggleUploadSection()">
-                <h2>📤 Upload Staff Data</h2>
-                <span class="collapse-icon" id="uploadCollapseIcon">▼</span>
+            <div class="section-header" onclick="toggleStaffManagementSection()">
+                <h2>📤 Staff Management (Upload & Generate ID)</h2>
+                <span class="collapse-icon" id="staffManagementCollapseIcon">▼</span>
             </div>
-            <div class="upload-content" id="uploadContent">
-            <div class="upload-grid">
-                <div class="upload-card">
-                    <h3>Dairies Plant Staff</h3>
-                    <input type="file" id="dairiesFile" accept=".xlsx,.xls" class="file-input">
-                    <button onclick="uploadFile('dairies')" class="btn-upload">Upload Dairies</button>
+            <div class="upload-content" id="staffManagementContent">
+                <!-- Upload Subsection -->
+                <div style="margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px solid #ddd;">
+                    <h3 style="margin-bottom: 15px; color: #333;">Upload Staff Data</h3>
+                    <div class="upload-grid">
+                        <div class="upload-card">
+                            <h3>Dairies Plant Staff</h3>
+                            <input type="file" id="dairiesFile" accept=".xlsx,.xls" class="file-input">
+                            <button onclick="uploadFile('dairies')" class="btn-upload">Upload Dairies</button>
+                        </div>
+                        <div class="upload-card">
+                            <h3>Swan Plant Staff</h3>
+                            <input type="file" id="swanFile" accept=".xlsx,.xls" class="file-input">
+                            <button onclick="uploadFile('swan')" class="btn-upload">Upload Swan</button>
+                        </div>
+                        <div class="upload-card">
+                            <h3>Snacks Plant Group 1</h3>
+                            <input type="file" id="snacks1File" accept=".xlsx,.xls" class="file-input">
+                            <button onclick="uploadFile('snacks1')" class="btn-upload">Upload Snacks 1</button>
+                        </div>
+                        <div class="upload-card">
+                            <h3>Snacks Plant Group 2</h3>
+                            <input type="file" id="snacks2File" accept=".xlsx,.xls" class="file-input">
+                            <button onclick="uploadFile('snacks2')" class="btn-upload">Upload Snacks 2</button>
+                        </div>
+                    </div>
+                    <p id="uploadMessage" class="upload-message"></p>
                 </div>
-                <div class="upload-card">
-                    <h3>Swan Plant Staff</h3>
-                    <input type="file" id="swanFile" accept=".xlsx,.xls" class="file-input">
-                    <button onclick="uploadFile('swan')" class="btn-upload">Upload Swan</button>
+
+                <!-- Generate One-Time ID Subsection -->
+                <div>
+                    <h3 style="margin-bottom: 15px; color: #333;">Generate One-Time ID (for staff without Employee ID)</h3>
+                    <div style="max-width: 500px;">
+                        <div class="form-group">
+                            <label for="staffNameInput">Staff Name</label>
+                            <input type="text" id="staffNameInput" placeholder="Enter staff name..." class="file-input">
+                        </div>
+                        <div class="form-group">
+                            <label for="staffDepartmentInput">Department</label>
+                            <input type="text" id="staffDepartmentInput" placeholder="Enter department..." class="file-input">
+                        </div>
+                        <div class="form-group">
+                            <label for="staffGroupSelect">Group</label>
+                            <select id="staffGroupSelect" class="file-input">
+                                <option value="">Select group</option>
+                                <option value="dairies">Dairies Plant</option>
+                                <option value="swan">Swan Plant</option>
+                                <option value="snacks1">Snacks Group 1</option>
+                                <option value="snacks2">Snacks Group 2</option>
+                            </select>
+                        </div>
+                        <button onclick="generateOneTimeId()" class="btn-upload" style="background: #16a34a;">Generate ID</button>
+                    </div>
+                    <p id="generateIdMessage" class="upload-message"></p>
+                    <div id="generatedIdCard" style="display: none; background: #f0fdf4; border: 2px solid #16a34a; border-radius: 10px; padding: 20px; margin-top: 20px; text-align: center;">
+                        <p style="margin: 0 0 10px 0; color: #666; font-size: 12px;">One-Time ID:</p>
+                        <p id="generatedIdDisplay" style="margin: 0; font-size: 24px; font-weight: bold; color: #16a34a; font-family: monospace; letter-spacing: 2px;"></p>
+                        <p style="margin: 10px 0 0 0; color: #666; font-size: 11px;">Share this ID with the staff member. Valid for one login only.</p>
+                    </div>
                 </div>
-                <div class="upload-card">
-                    <h3>Snacks Plant Group 1</h3>
-                    <input type="file" id="snacks1File" accept=".xlsx,.xls" class="file-input">
-                    <button onclick="uploadFile('snacks1')" class="btn-upload">Upload Snacks 1</button>
-                </div>
-                <div class="upload-card">
-                    <h3>Snacks Plant Group 2</h3>
-                    <input type="file" id="snacks2File" accept=".xlsx,.xls" class="file-input">
-                    <button onclick="uploadFile('snacks2')" class="btn-upload">Upload Snacks 2</button>
-                </div>
-            </div>
-            <p id="uploadMessage" class="upload-message"></p>
             </div>
         </div>
 

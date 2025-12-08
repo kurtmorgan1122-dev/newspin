@@ -9,22 +9,63 @@
 <body class="spinner-page">
     <!-- Login Section -->
     <div id="loginSection" class="login-container">
+        <!-- How-to / Intro Popup (shows every time on the login screen) -->
+        <div id="howtoOverlay" class="howto-overlay">
+            <div class="howto-card">
+                <button id="howtoClose" class="howto-close" aria-label="Close how-to">✕</button>
+                <div class="howto-decor">
+                    <!-- Inline SVG Santa -->
+                    <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <circle cx="32" cy="32" r="30" fill="#ffeded" />
+                        <path d="M20 30c0-6 6-10 12-10s12 4 12 10" fill="#fff" />
+                        <path d="M18 28c0 8 14 12 14 12s14-4 14-12" fill="#c41e3a" />
+                        <circle cx="24" cy="34" r="3" fill="#6b2b2b" />
+                        <circle cx="40" cy="34" r="3" fill="#6b2b2b" />
+                    </svg>
+                    <!-- Inline SVG Christmas tree -->
+                    <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <rect x="28" y="44" width="8" height="12" fill="#8b5a2b" />
+                        <path d="M8 38 L32 10 L56 38 Z" fill="#0b7a34" />
+                        <path d="M14 48 L32 24 L50 48 Z" fill="#0faa3a" opacity="0.95" />
+                        <circle cx="32" cy="20" r="2" fill="#ffd700" />
+                    </svg>
+                    <!-- Inline SVG Gift -->
+                    <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <rect x="8" y="22" width="48" height="30" rx="4" fill="#ffd700" />
+                        <path d="M32 22 v30" stroke="#c41e3a" stroke-width="4" />
+                        <path d="M8 34 h48" stroke="#c41e3a" stroke-width="4" />
+                    </svg>
+                    <!-- Inline SVG Ornament -->
+                    <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <circle cx="32" cy="34" r="14" fill="#c41e3a" />
+                        <rect x="26" y="14" width="12" height="6" rx="2" fill="#6b2b2b" />
+                        <circle cx="36" cy="30" r="2" fill="#ffd700" />
+                    </svg>
+                </div>
+                <h2>How to use our UFL Christmas Secret Santa</h2>
+                <p>Just input your <strong>Staff ID</strong>. The other fields will be populated automatically.</p>
+                <p>If you don't have a Staff ID, contact the HR Business Partner <a href="mailto:esawyer@uacfoodsng.com"><strong>esawyer@uacfoodsng.com</strong></a> to get yours.</p>
+                <p>For complaints, feedback or inquiries contact <strong>Ayeni Olabisi</strong> @ <em>09011102536</em> or <a href="mailto:oayeni@uacfoodsng.com"><em>oayeni@uacfoodsng.com</em></a></p>
+            </div>
+        </div>
         <div class="logo-overlay"></div>
         <div class="login-card">
             <h1 class="christmas-title">🎄 UFL Christmas Secret Santa 🎅</h1>
             <p class="christmas-subtitle">Season's Greetings! Let's find out who you'll gift! 🎁</p>
             
             <div class="form-group">
-                <label for="nameInput">Your Full Name</label>
-                <input type="text" id="nameInput" placeholder="Start typing your name..." autocomplete="off">
-                <div id="nameSuggestions" class="suggestions"></div>
+                <label for="employeeIdInput">Your Employee ID</label>
+                <input type="text" id="employeeIdInput" placeholder="Enter your Employee ID..." autocomplete="off">
             </div>
             
             <div class="form-group">
-                <label for="departmentSelect">Your Department</label>
-                <select id="departmentSelect">
-                    <option value="">Select your department</option>
-                </select>
+                <label for="nameInput">Your Full Name</label>
+                <input type="text" id="nameInput" placeholder="Auto-filled from Employee ID..." autocomplete="off" readonly>
+            </div>
+            
+            <div class="form-group">
+                <label for="departmentInput">Your Department</label>
+                <input type="text" id="departmentInput" placeholder="Auto-filled from Employee ID..." autocomplete="off" readonly>
             </div>
             
             <button id="loginBtn" class="btn-primary">Let's Go! 🎉</button>
@@ -58,6 +99,15 @@
 
         <p id="statusText" class="status-text"></p>
         <p id="anticipateText" class="anticipate-text hidden"></p>
+    </div>
+
+    <!-- Suspense Overlay (before result) -->
+    <div id="suspenseOverlay" class="overlay hidden">
+        <div class="result-card" style="text-align: center;">
+            <p style="font-size: 60px; margin: 20px 0;">🎅</p>
+            <h2 style="font-size: 28px; color: #c41e3a; margin: 20px 0; animation: pulse 0.8s infinite;">✨ Guess Who You Spun? ✨</h2>
+            <p style="font-size: 14px; color: #666; margin-top: 20px;">Revealing your Secret Santa match...</p>
+        </div>
     </div>
 
     <!-- Result Overlay -->

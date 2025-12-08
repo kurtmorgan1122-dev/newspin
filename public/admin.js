@@ -10,7 +10,7 @@ let totalPages = 1;
 window.addEventListener('DOMContentLoaded', () => {
     loadStats();
     loadStaffTable();
-    restoreUploadSectionState();
+    restoreStaffManagementSectionState();
 });
 
 async function loadStats() {
@@ -166,16 +166,83 @@ async function uploadFile(group) {
 }
 
 // Toggle upload section collapse
-function toggleUploadSection() {
-    const content = document.getElementById('uploadContent');
-    const icon = document.getElementById('uploadCollapseIcon');
+function toggleStaffManagementSection() {
+    const content = document.getElementById('staffManagementContent');
+    const icon = document.getElementById('staffManagementCollapseIcon');
     
     content.classList.toggle('collapsed');
     icon.classList.toggle('collapsed');
     
     // Save state to localStorage
     const isCollapsed = content.classList.contains('collapsed');
-    localStorage.setItem('uploadSectionCollapsed', isCollapsed);
+    localStorage.setItem('staffManagementSectionCollapsed', isCollapsed);
+}
+
+// Restore collapse state on page load
+function restoreStaffManagementSectionState() {
+    const isCollapsed = localStorage.getItem('staffManagementSectionCollapsed') === 'true';
+    
+    if (isCollapsed) {
+        const content = document.getElementById('staffManagementContent');
+        const icon = document.getElementById('staffManagementCollapseIcon');
+        
+        content.classList.add('collapsed');
+        icon.classList.add('collapsed');
+    }
+}
+
+// Generate one-time ID for staff without Employee ID
+async function generateOneTimeId() {
+    const name = document.getElementById('staffNameInput').value.trim();
+    const department = document.getElementById('staffDepartmentInput').value.trim();
+    const group = document.getElementById('staffGroupSelect').value;
+    const message = document.getElementById('generateIdMessage');
+    const card = document.getElementById('generatedIdCard');
+    const idDisplay = document.getElementById('generatedIdDisplay');
+
+    if (!name || !department || !group) {
+        message.textContent = 'Please fill in all fields';
+        message.style.color = '#c41e3a';
+        card.style.display = 'none';
+        return;
+    }
+
+    try {
+        message.textContent = 'Generating ID...';
+        message.style.color = '#667eea';
+
+        const response = await fetch(`${API_URL}/admin/generate-id`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, department, group })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            message.textContent = 'One-Time ID generated successfully!';
+            message.style.color = '#165b33';
+            idDisplay.textContent = data.oneTimeId;
+            card.style.display = 'block';
+            
+            // Clear inputs
+            document.getElementById('staffNameInput').value = '';
+            document.getElementById('staffDepartmentInput').value = '';
+            document.getElementById('staffGroupSelect').value = '';
+            
+            // Refresh stats
+            loadStats();
+        } else {
+            message.textContent = `Error: ${data.message}`;
+            message.style.color = '#c41e3a';
+            card.style.display = 'none';
+        }
+    } catch (error) {
+        console.error('Generate ID error:', error);
+        message.textContent = 'Connection error. Please try again.';
+        message.style.color = '#c41e3a';
+        card.style.display = 'none';
+    }
 }
 
 // Restore collapse state on page load
@@ -185,6 +252,19 @@ function restoreUploadSectionState() {
     if (isCollapsed) {
         const content = document.getElementById('uploadContent');
         const icon = document.getElementById('uploadCollapseIcon');
+        
+        content.classList.add('collapsed');
+        icon.classList.add('collapsed');
+    }
+}
+
+// Restore generate ID section state on page load
+function restoreGenerateIdSectionState() {
+    const isCollapsed = localStorage.getItem('generateIdSectionCollapsed') === 'true';
+    
+    if (isCollapsed) {
+        const content = document.getElementById('generateIdContent');
+        const icon = document.getElementById('generateIdCollapseIcon');
         
         content.classList.add('collapsed');
         icon.classList.add('collapsed');

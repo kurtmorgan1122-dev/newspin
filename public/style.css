@@ -70,6 +70,69 @@ body {
     pointer-events: none;
 }
 
+/* How-to popup styles */
+.howto-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,0.45);
+    z-index: 300;
+    padding: 20px;
+}
+
+.howto-card {
+    position: relative;
+    max-width: 520px;
+    width: 100%;
+    background: linear-gradient(180deg, #fff 0%, #fffef8 100%);
+    border-radius: 16px;
+    padding: 22px 20px 26px 20px;
+    box-shadow: 0 18px 40px rgba(0,0,0,0.45);
+    text-align: center;
+    font-family: Georgia, serif;
+}
+
+.howto-close {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    background: transparent;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    color: #6b2b2b;
+}
+
+.howto-decor {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin-bottom: 12px;
+}
+
+.howto-decor img {
+    width: 56px;
+    height: 56px;
+    object-fit: cover;
+    border-radius: 8px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+}
+
+.howto-card h2 {
+    margin-top: 4px;
+    margin-bottom: 8px;
+    color: #c41e3a;
+}
+
+.howto-card p {
+    font-size: 13px;
+    color: #333;
+    margin: 6px 0;
+    line-height: 1.4;
+}
+
 .login-card {
     background: rgba(255, 255, 255, 0.95);
     border-radius: 20px;
@@ -96,26 +159,26 @@ body {
 }
 
 .form-group {
-    margin-bottom: 20px;
+    margin-bottom: 12px;
     position: relative;
 }
 
 .form-group label {
     display: block;
-    margin-bottom: 8px;
+    margin-bottom: 5px;
     color: #333;
     font-weight: bold;
-    font-size: 13px;
+    font-size: 12px;
 }
 
 .form-group input,
 .form-group select {
     width: 100%;
-    padding: 14px 15px;
-    border: 2px solid #ddd;
-    border-radius: 10px;
+    padding: 10px 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
     font-family: Georgia, serif;
-    font-size: 14px;
+    font-size: 13px;
     transition: border-color 0.3s;
     -webkit-appearance: none;
     -moz-appearance: none;
@@ -247,15 +310,13 @@ body {
 /* Spinner Section */
 .spinner-container {
     min-height: 100vh;
-    background: 
-        linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.4)),
-        url('https://images.unsplash.com/photo-1543589077-47d81606c1bf?w=1920') center/cover no-repeat fixed;
+    /* Use a simple gradient background for the spinner page (no image) */
+    background: linear-gradient(135deg, #1b4636, #0b2a23);
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     padding: 20px 15px;
-    animation: spinnerBackgroundChange 20s infinite;
 }
 
 @keyframes spinnerBackgroundChange {
@@ -471,6 +532,21 @@ body {
 }
 
 /* Admin Page Styles */
+.result-card.zoom-in {
+    animation: zoomIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes zoomIn {
+    from {
+        transform: scale(0.3);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
 .admin-page {
     background: #f5f5f5;
     min-height: 100vh;
@@ -525,9 +601,9 @@ body {
 
 .upload-section {
     background: white;
-    padding: 25px 20px;
+    padding: 15px 15px;
     border-radius: 15px;
-    margin-bottom: 30px;
+    margin-bottom: 20px;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
 }
 
@@ -537,8 +613,8 @@ body {
     align-items: center;
     cursor: pointer;
     user-select: none;
-    padding: 5px 0;
-    margin-bottom: 20px;
+    padding: 0;
+    margin-bottom: 15px;
     transition: opacity 0.2s;
 }
 
@@ -547,13 +623,13 @@ body {
 }
 
 .section-header h2 {
-    font-size: 18px;
+    font-size: 16px;
     color: #333;
     margin: 0;
 }
 
 .collapse-icon {
-    font-size: 20px;
+    font-size: 18px;
     color: #667eea;
     transition: transform 0.3s ease;
     font-weight: bold;
@@ -578,30 +654,30 @@ body {
 
 .upload-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 15px;
-    margin-bottom: 20px;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin-bottom: 15px;
 }
 
 .upload-card {
-    padding: 20px 15px;
+    padding: 12px 10px;
     border: 2px dashed #ddd;
-    border-radius: 10px;
+    border-radius: 8px;
     text-align: center;
 }
 
 .upload-card h3 {
-    font-size: 13px;
+    font-size: 12px;
     color: #333;
-    margin-bottom: 15px;
+    margin-bottom: 10px;
     font-weight: bold;
 }
 
 .file-input {
     display: block;
     width: 100%;
-    padding: 10px;
-    margin-bottom: 10px;
+    padding: 8px;
+    margin-bottom: 8px;
     font-family: Georgia, serif;
     font-size: 11px;
     border: 1px solid #ddd;
@@ -610,13 +686,13 @@ body {
 
 .btn-upload {
     width: 100%;
-    padding: 12px;
+    padding: 10px;
     background: #667eea;
     color: white;
     border: none;
     border-radius: 5px;
     font-family: Georgia, serif;
-    font-size: 12px;
+    font-size: 11px;
     cursor: pointer;
     transition: background 0.3s;
     font-weight: bold;
@@ -783,6 +859,12 @@ body {
     .spinner-center {
         width: 85px;
         height: 85px;
+    }
+
+    /* Move login container up slightly on mobile so it sits higher on small screens */
+    .login-container {
+        margin-top: -36px;
+        padding-top: 6px;
     }
 
     .spinner-button {

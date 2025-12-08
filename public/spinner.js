@@ -7,8 +7,10 @@ let currentStaff = null;
 
 // Load departments on page load
 window.addEventListener('DOMContentLoaded', async () => {
-    await loadDepartments();
     setupEventListeners();
+    // Show how-to overlay on login screen each time the page loads
+    const howtoOverlay = document.getElementById('howtoOverlay');
+    if (howtoOverlay) howtoOverlay.classList.remove('hidden');
 });
 
 async function loadDepartments() {
@@ -29,53 +31,66 @@ async function loadDepartments() {
 }
 
 function setupEventListeners() {
+    const employeeIdInput = document.getElementById('employeeIdInput');
     const nameInput = document.getElementById('nameInput');
+    const departmentInput = document.getElementById('departmentInput');
     const loginBtn = document.getElementById('loginBtn');
     const readyBtn = document.getElementById('readyBtn');
     const spinner = document.getElementById('spinner');
     const logoutBtn = document.getElementById('logoutBtn');
+    const errorElement = document.getElementById('loginError');
 
-    // Name input with suggestions
-    nameInput.addEventListener('input', async (e) => {
-        const query = e.target.value.trim();
-        if (query.length < 2) {
-            document.getElementById('nameSuggestions').style.display = 'none';
+    // Employee ID input with instant auto-fill on input (not blur)
+    employeeIdInput.addEventListener('input', async (e) => {
+        const employeeId = e.target.value.trim();
+        
+        if (!employeeId) {
+            nameInput.value = '';
+            departmentInput.value = '';
+            errorElement.textContent = '';
             return;
         }
 
         try {
-            const response = await fetch(`${API_URL}/search-names?query=${encodeURIComponent(query)}`);
+            const response = await fetch(`${API_URL}/lookup-employee/${encodeURIComponent(employeeId)}`);
             const data = await response.json();
-            
-            const suggestionsDiv = document.getElementById('nameSuggestions');
-            suggestionsDiv.innerHTML = '';
-            
-            if (data.names.length > 0) {
-                data.names.forEach(name => {
-                    const div = document.createElement('div');
-                    div.className = 'suggestion-item';
-                    div.textContent = name;
-                    div.onclick = () => {
-                        nameInput.value = name;
-                        suggestionsDiv.style.display = 'none';
-                    };
-                    suggestionsDiv.appendChild(div);
-                });
-                suggestionsDiv.style.display = 'block';
+
+            if (data.success) {
+                nameInput.value = data.name;
+                departmentInput.value = data.department;
+                errorElement.textContent = '';
             } else {
-                suggestionsDiv.style.display = 'none';
+                nameInput.value = '';
+                departmentInput.value = '';
+                errorElement.textContent = data.message || 'Employee ID not found';
             }
         } catch (error) {
-            console.error('Error searching names:', error);
+            console.error('Error looking up employee:', error);
+            errorElement.textContent = 'Error looking up Employee ID';
         }
+    });
+
+    // Name input with suggestions (deprecated, kept for reference)
+    nameInput.addEventListener('input', async (e) => {
+        // Auto-filled field, no suggestions needed
     });
 
     // Click outside to close suggestions
     document.addEventListener('click', (e) => {
         if (!e.target.closest('.form-group')) {
-            document.getElementById('nameSuggestions').style.display = 'none';
+            const suggestionsDivs = document.querySelectorAll('.suggestions');
+            suggestionsDivs.forEach(div => div.style.display = 'none');
         }
     });
+
+    // How-to overlay close button
+    const howtoClose = document.getElementById('howtoClose');
+    if (howtoClose) {
+        howtoClose.addEventListener('click', (e) => {
+            const overlay = document.getElementById('howtoOverlay');
+            if (overlay) overlay.style.display = 'none';
+        });
+    }
 
     // Login button
     loginBtn.addEventListener('click', handleLogin);
@@ -98,12 +113,13 @@ function setupEventListeners() {
 }
 
 async function handleLogin() {
+    const employeeId = document.getElementById('employeeIdInput').value.trim();
     const name = document.getElementById('nameInput').value.trim();
-    const department = document.getElementById('departmentSelect').value;
+    const department = document.getElementById('departmentInput').value.trim();
     const errorElement = document.getElementById('loginError');
 
-    if (!name || !department) {
-        errorElement.textContent = 'Please enter your name and select your department';
+    if (!employeeId || !name || !department) {
+        errorElement.textContent = 'Please enter your Employee ID and verify auto-filled fields';
         return;
     }
 
@@ -111,7 +127,7 @@ async function handleLogin() {
         const response = await fetch(`${API_URL}/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name, department })
+            body: JSON.stringify({ employeeId })
         });
 
         const data = await response.json();
@@ -142,26 +158,24 @@ async function handleSpin() {
 
     statusText.textContent = 'Spinning... 🎄';
     
-    // Calculate random rotations (total spin will now be 10 seconds)
-    // Make it "super super fast" by increasing base rotations
-    const baseRotations = 300; // Much faster base rotations
-    const randomExtra = Math.floor(Math.random() * 200); // Extra random rotations for variety
-    const totalRotations = baseRotations + randomExtra;
-    const degrees = totalRotations * 360;
+    // Fast spin for 6 seconds, then slow down for 4 seconds
+    const baseRotations = 200; // Fast rotations for first 6 seconds
+    const randomExtra = Math.floor(Math.random() * 100);
+    const fastRotations = baseRotations + randomExtra;
+    const fastDegrees = fastRotations * 360;
 
     spinner.classList.add('spinning');
-    // Use a transform transition so we rotate by many degrees (multiple revolutions)
-    // This ensures the wheel actually spins `totalRotations` times over 10s.
     wheel.style.animation = 'none';
-    wheel.style.transition = `transform 10s cubic-bezier(0.33, 0.02, 0.67, 0.98)`;
-    // Apply the large rotation target (many revolutions)
-    wheel.style.transform = `rotate(${degrees}deg)`;
+    
+    // First phase: Fast spin for 6 seconds
+    wheel.style.transition = `transform 6s cubic-bezier(0.33, 0.02, 0.67, 0.98)`;
+    wheel.style.transform = `rotate(${fastDegrees}deg)`;
 
-    // Show anticipation text near the end (3s before finish)
+    // Show anticipation text near the end of fast spin (at 5s)
     setTimeout(() => {
         anticipateText.textContent = '✨ Anticipate... ✨';
         anticipateText.classList.remove('hidden');
-    }, 7000);
+    }, 5000);
 
     // Get the spin result from server
     try {
@@ -174,14 +188,39 @@ async function handleSpin() {
         const data = await response.json();
 
         if (data.success) {
-            // Wait for spin to complete (10s), then show result
+            // After 6 seconds of fast spin, add 4 seconds of slow spin
+            setTimeout(() => {
+                // Add more rotations for the slow final phase
+                const slowRotations = 20; // Just a few rotations in the slow phase
+                const slowDegrees = fastDegrees + (slowRotations * 360);
+                
+                // Slow spin for 4 seconds with easing in
+                wheel.style.transition = `transform 4s cubic-bezier(0.17, 0.67, 0.83, 0.67)`;
+                wheel.style.transform = `rotate(${slowDegrees}deg)`;
+                
+                statusText.textContent = 'Almost there... 🎁';
+            }, 6000);
+
+            // Use computed total spin time (6s fast + 4s slow)
+            const totalSpinTime = 10000;
+
+            // Show suspense overlay 2 seconds after spinning has completed
             setTimeout(() => {
                 spinner.classList.remove('spinning');
-                // clear transition so subsequent spins start clean
                 wheel.style.transition = '';
                 anticipateText.classList.add('hidden');
+
+                // Show suspense overlay with Santa and "Guess Who You Spun"
+                const suspenseOverlay = document.getElementById('suspenseOverlay');
+                suspenseOverlay.classList.remove('hidden');
+            }, totalSpinTime + 2000);
+
+            // After 3 more seconds (15s total from spin start), show final result
+            setTimeout(() => {
+                const suspenseOverlay = document.getElementById('suspenseOverlay');
+                suspenseOverlay.classList.add('hidden');
                 showResult(data.spinResult);
-            }, 10000);
+            }, totalSpinTime + 5000);
         } else {
             alert(data.message);
             isSpinning = false;
@@ -199,5 +238,10 @@ async function handleSpin() {
 
 function showResult(name) {
     document.getElementById('resultName').textContent = name;
-    document.getElementById('resultOverlay').classList.remove('hidden');
+    const resultOverlay = document.getElementById('resultOverlay');
+    resultOverlay.classList.remove('hidden');
+    const resultCard = resultOverlay.querySelector('.result-card');
+    resultCard.classList.add('zoom-in');
+    isSpinning = false; // Reset spinning flag
+    isSpinning = false; // Reset spinning flag
 }
