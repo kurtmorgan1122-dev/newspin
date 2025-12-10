@@ -156,6 +156,37 @@ app.get('/api/lookup-employee/:employeeId', async (req, res) => {
   }
 });
 
+// Remind Me endpoint - Get spin result for a staff member
+app.get('/api/remind-me/:employeeId', async (req, res) => {
+  try {
+    const { employeeId } = req.params;
+    const staff = await Staff.findOne({ employeeId: employeeId.trim() });
+
+    if (!staff) {
+      return res.status(404).json({ success: false, message: 'Staff ID not found' });
+    }
+
+    if (!staff.hasSpun) {
+      return res.status(400).json({ success: false, message: 'You have not spun yet' });
+    }
+
+    // Get the department of the spun person
+    const spunStaff = await Staff.findOne({ name: staff.spinResult });
+    const spinResultDept = spunStaff ? spunStaff.department : 'N/A';
+
+    res.json({ 
+      success: true, 
+      spinResult: {
+        spinResultName: staff.spinResult,
+        spinResultDept: spinResultDept,
+        spinResultGroup: staff.spinResultGroup
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 // Login endpoint
 app.post('/api/login', async (req, res) => {
   try {
@@ -251,12 +282,22 @@ app.post('/api/spin', async (req, res) => {
       return res.status(400).json({ success: false, message: 'Already spun' });
     }
 
-    // Get available staff in the SAME GROUP (not yet spun by anyone)
-    const availableStaff = await Staff.find({ 
+    // First, try to get staff who have already spun (hasSpun: true, hasBeenSpun: false)
+    let availableStaff = await Staff.find({ 
+      hasSpun: true,
       hasBeenSpun: false,
-      group: spinner.group, // Only same group
-      _id: { $ne: staffId } // Exclude self
+      group: spinner.group,
+      _id: { $ne: staffId }
     });
+
+    // If no one who has spun is available, fall back to those who haven't spun
+    if (availableStaff.length === 0) {
+      availableStaff = await Staff.find({ 
+        hasBeenSpun: false,
+        group: spinner.group,
+        _id: { $ne: staffId }
+      });
+    }
 
     if (availableStaff.length === 0) {
       return res.status(400).json({ success: false, message: 'No available staff in your group to spin' });
@@ -300,18 +341,54 @@ app.post('/api/spin', async (req, res) => {
 app.get('/api/admin/staff', async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
+    const search = req.query.search || '';
     const limit = 25;
     const skip = (page - 1) * limit;
 
-    const total = await Staff.countDocuments({ hasSpun: true });
-    const staff = await Staff.find({ hasSpun: true })
+    // Build filter: hasSpun: true, and optionally filter by name or spinResult
+    const filter = { hasSpun: true };
+    if (search.trim()) {
+      // Split search into individual words for flexible matching
+      const searchWords = search.trim().toUpperCase().split(/\s+/);
+      
+      // Create regex patterns for each word (case-insensitive)
+      const wordPatterns = searchWords.map(word => new RegExp(word, 'i'));
+      
+      // Match if ALL words are found anywhere in the name or spinResult
+      filter.$or = [
+        {
+          name: {
+            $regex: wordPatterns.map(p => `(?=.*${p.source})`).join(''),
+            $options: 'i'
+          }
+        },
+        {
+          spinResult: {
+            $regex: wordPatterns.map(p => `(?=.*${p.source})`).join(''),
+            $options: 'i'
+          }
+        }
+      ];
+    }
+
+    const total = await Staff.countDocuments(filter);
+    const staff = await Staff.find(filter)
       .skip(skip)
       .limit(limit)
       .sort({ name: 1 });
 
+    // Enrich staff data with department of spinResult (spun staff)
+    const enrichedStaff = await Promise.all(staff.map(async (s) => {
+      const spunStaff = await Staff.findOne({ name: s.spinResult });
+      return {
+        ...s.toObject(),
+        spinResultDept: spunStaff ? spunStaff.department : null
+      };
+    }));
+
     res.json({ 
       success: true, 
-      staff, 
+      staff: enrichedStaff, 
       total,
       pages: Math.ceil(total / limit),
       currentPage: page

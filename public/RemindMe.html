@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Remind Me - UFL Christmas Spinner 🎄</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* RemindMe page specific styles */
+        body.remind-me-page {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 15px;
+            font-family: Georgia, serif;
+            position: relative;
+            overflow: hidden;
+        }
+
+        body.remind-me-page::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 200%;
+            height: 100%;
+            background: 
+                linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.5)),
+                url('https://images.unsplash.com/photo-1512389142860-9c449e58a543?w=1920') left center/50% 100% no-repeat,
+                linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.5)),
+                url('https://images.unsplash.com/photo-1576919228236-a097c32a5cd4?w=1920') right center/50% 100% no-repeat;
+            animation: slideBackground 24s infinite;
+            z-index: -2;
+        }
+
+        @keyframes slideBackground {
+            0% {
+                background-position: 0 center, 0 center, 100% center, 100% center;
+            }
+            24% {
+                background-position: 0 center, 0 center, 100% center, 100% center;
+            }
+            26% {
+                background-position: -50% center, -50% center, 50% center, 50% center;
+            }
+            50% {
+                background-position: -100% center, -100% center, 0 center, 0 center;
+                background-image: 
+                    linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.5)),
+                    url('https://images.unsplash.com/photo-1576919228236-a097c32a5cd4?w=1920'),
+                    linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.5)),
+                    url('https://images.unsplash.com/photo-1482517967863-00e15c9b44be?w=1920');
+            }
+            50.1% {
+                background-image: 
+                    linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.5)),
+                    url('https://images.unsplash.com/photo-1482517967863-00e15c9b44be?w=1920'),
+                    linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.5)),
+                    url('https://images.unsplash.com/photo-1513885535751-8b9238bd345a?w=1920');
+            }
+            52% {
+                background-position: 0 center, 0 center, 100% center, 100% center;
+            }
+            74% {
+                background-position: 0 center, 0 center, 100% center, 100% center;
+            }
+            76% {
+                background-position: -50% center, -50% center, 50% center, 50% center;
+            }
+            100% {
+                background-position: -100% center, -100% center, 0 center, 0 center;
+                background-image: 
+                    linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.5)),
+                    url('https://images.unsplash.com/photo-1513885535751-8b9238bd345a?w=1920'),
+                    linear-gradient(rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.5)),
+                    url('https://images.unsplash.com/photo-1512389142860-9c449e58a543?w=1920');
+            }
+        }
+
+        .remind-me-container {
+            width: 100%;
+            max-width: 500px;
+            padding: 0;
+            position: relative;
+            z-index: 2;
+        }
+
+        .remind-me-card {
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            animation: slideIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .remind-me-title {
+            font-size: 24px;
+            color: #c41e3a;
+            text-align: center;
+            margin-bottom: 8px;
+            font-weight: bold;
+            line-height: 1.4;
+        }
+
+        .remind-me-subtitle {
+            font-size: 13px;
+            color: #165b33;
+            text-align: center;
+            margin-bottom: 25px;
+            line-height: 1.5;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+            position: relative;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: bold;
+            font-size: 12px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-family: Georgia, serif;
+            font-size: 13px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #c41e3a, #165b33);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-family: Georgia, serif;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(196, 30, 58, 0.3);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .error-message {
+            color: #c41e3a;
+            text-align: center;
+            margin-top: 15px;
+            font-size: 12px;
+            font-weight: bold;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        /* Result Card with Animation */
+        .result-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 15px;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+
+        .result-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .result-card {
+            position: relative;
+            max-width: 500px;
+            width: 100%;
+            background: white;
+            border-radius: 20px;
+            padding: 40px 30px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            animation: zoomIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes zoomIn {
+            from {
+                transform: scale(0.3);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .result-card h2 {
+            font-size: 28px;
+            color: #c41e3a;
+            margin-bottom: 20px;
+            line-height: 1.3;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .result-item {
+            background: #f9f9f9;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 12px 0;
+            border-left: 4px solid #c41e3a;
+            animation: slideInLeft 0.5s ease-out;
+            animation-fill-mode: both;
+        }
+
+        .result-item:nth-child(2) {
+            animation-delay: 0.1s;
+        }
+
+        .result-item:nth-child(3) {
+            animation-delay: 0.2s;
+        }
+
+        .result-item:nth-child(4) {
+            animation-delay: 0.3s;
+        }
+
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .result-label {
+            font-size: 11px;
+            color: #999;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+
+        .result-value {
+            font-size: 18px;
+            color: #165b33;
+            font-weight: bold;
+        }
+
+        .result-actions {
+            margin-top: 25px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-secondary {
+            flex: 1;
+            padding: 12px 16px;
+            background: #f0f0f0;
+            color: #333;
+            border: none;
+            border-radius: 8px;
+            font-family: Georgia, serif;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: #c41e3a;
+            top: -10px;
+            animation: fall 3s linear infinite;
+        }
+
+        .confetti:nth-child(1) { left: 10%; background: #c41e3a; animation-delay: 0s; }
+        .confetti:nth-child(2) { left: 30%; background: #165b33; animation-delay: 0.5s; }
+        .confetti:nth-child(3) { left: 50%; background: #ffd700; animation-delay: 1s; }
+        .confetti:nth-child(4) { left: 70%; background: #c41e3a; animation-delay: 1.5s; }
+        .confetti:nth-child(5) { left: 90%; background: #165b33; animation-delay: 2s; }
+
+        @keyframes fall {
+            to {
+                transform: translateY(500px) rotate(360deg);
+            }
+        }
+
+        .confetti-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .decorative-icons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-bottom: 15px;
+            font-size: 32px;
+        }
+
+        /* Mobile responsive */
+        @media (max-width: 768px) {
+            .remind-me-card {
+                padding: 25px 20px;
+            }
+
+            .remind-me-title {
+                font-size: 20px;
+            }
+
+            .result-card {
+                padding: 30px 20px;
+            }
+
+            .result-card h2 {
+                font-size: 22px;
+            }
+
+            .result-value {
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body class="remind-me-page">
+    <!-- Main Container -->
+    <div class="remind-me-container">
+        <div class="remind-me-card">
+            <h1 class="remind-me-title">🎄 UFL Christmas Secret Santa - Remind Me 🎅</h1>
+            <p class="remind-me-subtitle">Enter your Staff ID to recall your Secret Santa match!</p>
+            
+            <div class="form-group">
+                <label for="staffIdInput">Your Staff ID</label>
+                <input type="text" id="staffIdInput" placeholder="Enter your Staff ID..." autocomplete="off">
+            </div>
+            
+            <button id="remindBtn" class="btn-primary">Remind Me! 🎁</button>
+            <p class="error-message" id="errorMessage"></p>
+        </div>
+    </div>
+
+    <!-- Result Overlay -->
+    <div id="resultOverlay" class="result-overlay">
+        <div class="result-card">
+            <div class="confetti-container">
+                <div class="confetti"></div>
+                <div class="confetti"></div>
+                <div class="confetti"></div>
+                <div class="confetti"></div>
+                <div class="confetti"></div>
+            </div>
+            
+            <div class="decorative-icons">
+                <!-- Inline SVG Santa -->
+                <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" width="32" height="32" aria-hidden="true">
+                    <circle cx="32" cy="32" r="30" fill="#ffeded" />
+                    <path d="M20 30c0-6 6-10 12-10s12 4 12 10" fill="#fff" />
+                    <path d="M18 28c0 8 14 12 14 12s14-4 14-12" fill="#c41e3a" />
+                    <circle cx="24" cy="34" r="3" fill="#6b2b2b" />
+                    <circle cx="40" cy="34" r="3" fill="#6b2b2b" />
+                </svg>
+                
+                <!-- Inline SVG Christmas tree -->
+                <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" width="32" height="32" aria-hidden="true">
+                    <rect x="28" y="44" width="8" height="12" fill="#8b5a2b" />
+                    <path d="M8 38 L32 10 L56 38 Z" fill="#0b7a34" />
+                    <path d="M14 48 L32 24 L50 48 Z" fill="#0faa3a" opacity="0.95" />
+                    <circle cx="32" cy="20" r="2" fill="#ffd700" />
+                </svg>
+                
+                <!-- Inline SVG Gift -->
+                <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" width="32" height="32" aria-hidden="true">
+                    <rect x="8" y="22" width="48" height="30" rx="4" fill="#ffd700" />
+                    <path d="M32 22 v30" stroke="#c41e3a" stroke-width="4" />
+                    <path d="M8 34 h48" stroke="#c41e3a" stroke-width="4" />
+                </svg>
+            </div>
+            
+            <h2>🎉 Here's Your Match! 🎉</h2>
+            
+            <div class="result-item">
+                <div class="result-label">🎁 Person You Spun</div>
+                <div class="result-value" id="resultName"></div>
+            </div>
+            
+            <div class="result-item">
+                <div class="result-label">🏢 Department</div>
+                <div class="result-value" id="resultDept"></div>
+            </div>
+            
+            <div class="result-item">
+                <div class="result-label">👥 Group</div>
+                <div class="result-value" id="resultGroup"></div>
+            </div>
+            
+            <div class="result-actions">
+                <button class="btn-secondary" onclick="document.getElementById('resultOverlay').classList.remove('show'); location.reload();">Search Again</button>
+                <button class="btn-secondary" onclick="copyToClipboard();">Copy Details</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = window.location.hostname === '0.0.0.0' || window.location.hostname === '127.0.0.1'
+            ? 'http://0.0.0.0:3000/api'
+            : `${window.location.origin}/api`;
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const remindBtn = document.getElementById('remindBtn');
+            const staffIdInput = document.getElementById('staffIdInput');
+
+            remindBtn.addEventListener('click', handleRemind);
+            
+            staffIdInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    handleRemind();
+                }
+            });
+        });
+
+        async function handleRemind() {
+            const staffId = document.getElementById('staffIdInput').value.trim();
+            const errorElement = document.getElementById('errorMessage');
+            
+            if (!staffId) {
+                errorElement.textContent = 'Please enter your Staff ID';
+                errorElement.classList.add('show');
+                return;
+            }
+
+            errorElement.classList.remove('show');
+
+            try {
+                // First, lookup the employee to get their name
+                const lookupResponse = await fetch(`${API_URL}/lookup-employee/${encodeURIComponent(staffId)}`);
+                const lookupData = await lookupResponse.json();
+
+                if (!lookupData.success) {
+                    errorElement.textContent = 'Staff ID not found';
+                    errorElement.classList.add('show');
+                    return;
+                }
+
+                // Then get their spin result
+                const spinResponse = await fetch(`${API_URL}/remind-me/${encodeURIComponent(staffId)}`);
+                const spinData = await spinResponse.json();
+
+                if (!spinData.success) {
+                    errorElement.textContent = spinData.message || 'No spin record found';
+                    errorElement.classList.add('show');
+                    return;
+                }
+
+                // Display the result
+                const group = spinData.spinResult.spinResultGroup || 'N/A';
+                const groupFormatted = formatGroup(group);
+
+                document.getElementById('resultName').textContent = spinData.spinResult.spinResultName || 'N/A';
+                document.getElementById('resultDept').textContent = spinData.spinResult.spinResultDept || 'N/A';
+                document.getElementById('resultGroup').textContent = groupFormatted;
+
+                document.getElementById('resultOverlay').classList.add('show');
+            } catch (error) {
+                console.error('Error:', error);
+                errorElement.textContent = 'Connection error. Please try again.';
+                errorElement.classList.add('show');
+            }
+        }
+
+        function formatGroup(group) {
+            if (!group) return 'N/A';
+            const groupMap = {
+                'dairies': 'Dairies Plant',
+                'swan': 'Swan Plant',
+                'snacks1': 'Snacks Plant',
+                'snacks2': 'Snacks Plant'
+            };
+            return groupMap[group] || group;
+        }
+
+        function copyToClipboard() {
+            const name = document.getElementById('resultName').textContent;
+            const dept = document.getElementById('resultDept').textContent;
+            const group = document.getElementById('resultGroup').textContent;
+            
+            const text = `🎁 Secret Santa Match:\nName: ${name}\nDepartment: ${dept}\nGroup: ${group}`;
+            
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Details copied to clipboard! ✓');
+            }).catch(() => {
+                alert('Failed to copy. Please try again.');
+            });
+        }
+    </script>
+</body>
+</html>

@@ -236,12 +236,13 @@ async function handleSpin() {
     }
 }
 
-function showResult(name) {
-    document.getElementById('resultName').textContent = name;
+function showResult(spinResult) {
+    document.getElementById('resultName').textContent = spinResult.name;
+    document.getElementById('resultDepartment').textContent = `Department: ${spinResult.department}`;
+    document.getElementById('resultGroup').textContent = `Group: ${spinResult.group}`;
     const resultOverlay = document.getElementById('resultOverlay');
     resultOverlay.classList.remove('hidden');
     const resultCard = resultOverlay.querySelector('.result-card');
     resultCard.classList.add('zoom-in');
-    isSpinning = false; // Reset spinning flag
     isSpinning = false; // Reset spinning flag
 }

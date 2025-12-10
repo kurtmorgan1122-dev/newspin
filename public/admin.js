@@ -11,6 +11,15 @@ window.addEventListener('DOMContentLoaded', () => {
     loadStats();
     loadStaffTable();
     restoreStaffManagementSectionState();
+    
+    // Add search input listener
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            const query = e.target.value.trim();
+            loadStaffTable(1, query);
+        });
+    }
 });
 
 async function loadStats() {
@@ -29,9 +38,10 @@ async function loadStats() {
     }
 }
 
-async function loadStaffTable(page = 1) {
+async function loadStaffTable(page = 1, search = '') {
     try {
-        const response = await fetch(`${API_URL}/admin/staff?page=${page}`);
+        const params = new URLSearchParams({ page, search });
+        const response = await fetch(`${API_URL}/admin/staff?${params}`);
         const data = await response.json();
         
         if (data.success) {
@@ -42,7 +52,7 @@ async function loadStaffTable(page = 1) {
             tbody.innerHTML = '';
             
             if (data.staff.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" class="no-data">No spin records yet</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" class="no-data">No spin records yet</td></tr>';
             } else {
                 data.staff.forEach((staff, index) => {
                     const row = document.createElement('tr');
@@ -52,6 +62,7 @@ async function loadStaffTable(page = 1) {
                         <td>${serialNumber}</td>
                         <td>${staff.name}</td>
                         <td>${staff.spinResult || 'N/A'}</td>
+                        <td>${staff.spinResultDept || 'N/A'}</td>
                         <td>${formatGroup(staff.spinResultGroup)}</td>
                         <td>
                             <select class="gift-status-select" 
@@ -61,7 +72,7 @@ async function loadStaffTable(page = 1) {
                             </select>
                         </td>
                         <td>
-                            <button class="btn-reset" onclick="resetSpin('${staff._id}', '${staff.spinResult}')">
+                            <button class="btn-reset" disabled style="opacity: 0.5; cursor: not-allowed;">
                                 Reset
                             </button>
                         </td>
@@ -96,8 +107,10 @@ function updatePaginationControls() {
 
 function changePage(direction) {
     const newPage = currentPage + direction;
+    const searchInput = document.getElementById('searchInput');
+    const query = searchInput ? searchInput.value.trim() : '';
     if (newPage >= 1 && newPage <= totalPages) {
-        loadStaffTable(newPage);
+        loadStaffTable(newPage, query);
     }
 }
 
