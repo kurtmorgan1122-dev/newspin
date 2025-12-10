@@ -329,9 +329,19 @@ app.post('/api/spin', async (req, res) => {
     }
 
     res.json({ 
-      success: true, 
-      spinResult: spunStaff.name 
-    });
+  success: true, 
+  spinResult: {
+    name: spunStaff.name,
+    department: spunStaff.department,
+    group: spunStaff.group === 'snacks1' || spunStaff.group === 'snacks2' 
+      ? 'Snacks Plant' 
+      : spunStaff.group === 'swan' 
+      ? 'SWAN Plant' 
+      : spunStaff.group === 'dairies' 
+      ? 'Dairies Plant' 
+      : spunStaff.group
+  }
+});
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
