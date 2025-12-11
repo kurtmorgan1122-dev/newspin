@@ -231,19 +231,26 @@
         <!-- Validation Table -->
         <div class="validation-table-section">
             <h2>🎄 Spin Validation Table</h2>
-            <div style="margin-bottom: 15px; display: flex; gap: 10px; align-items: center;">
+            <div style="margin-bottom: 12px; display: flex; gap: 10px; align-items: center; flex-wrap:wrap;">
                 <input 
                     type="text" 
                     id="searchInput" 
                     placeholder="Search by name..." 
-                    style="padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; flex: 1; font-size: 13px;"
+                    style="padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; flex: 1 1 240px; font-size: 13px;"
                 />
-                <button class="fix-btn" id="resetBtn" onclick="resetBeenSpun()" style="background: #666;">
-                    🔄 Reset for Testing
-                </button>
-                <button class="fix-btn" id="fixUnmatchedBtn" onclick="fixUnmatched()" style="display: none;">
-                    🔧 Fix Unmatched Staff
-                </button>
+                <select id="deptFilter" style="padding:10px;border-radius:8px;border:1px solid #ddd;font-size:13px;">
+                    <option value="">All Departments</option>
+                </select>
+                <select id="groupFilter" style="padding:10px;border-radius:8px;border:1px solid #ddd;font-size:13px;">
+                    <option value="">All Groups</option>
+                    <option value="dairies">Dairies Plant</option>
+                    <option value="swan">Swan Plant</option>
+                    <option value="snacks1">Snacks Plant</option>
+                    <option value="snacks2">Snacks Plant</option>
+                </select>
+                <button class="fix-btn" id="downloadBtn" onclick="downloadExcel()" style="background: #0b79ff;">⬇️ Download Excel</button>
+                <button class="fix-btn" id="resetBtn" onclick="resetBeenSpun()" style="background: #666;">🔄 Reset for Testing</button>
+                <button class="fix-btn" id="fixUnmatchedBtn" onclick="fixUnmatched()" style="display: none;">🔧 Fix Unmatched Staff</button>
             </div>
             <div class="table-container">
                 <table class="validation-table">
@@ -261,7 +268,7 @@
                     </thead>
                     <tbody id="validationTableBody">
                         <tr>
-                            <td colspan="7" class="no-data">Loading...</td>
+                            <td colspan="8" class="no-data">Loading...</td>
                         </tr>
                     </tbody>
                 </table>
@@ -275,23 +282,30 @@
         </div>
     </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script>
         const API_URL = '/api';
 
         window.addEventListener('DOMContentLoaded', () => {
             loadValidationData();
-            
+
             // Add search input listener
             const searchInput = document.getElementById('searchInput');
             if (searchInput) {
-                searchInput.addEventListener('input', (e) => {
-                    const query = e.target.value.trim().toUpperCase();
-                    filterValidationTable(query);
+                searchInput.addEventListener('input', () => {
+                    filterValidationTable();
                 });
             }
+
+            // Dept & Group filters
+            const deptFilter = document.getElementById('deptFilter');
+            const groupFilter = document.getElementById('groupFilter');
+            if (deptFilter) deptFilter.addEventListener('change', () => filterValidationTable());
+            if (groupFilter) groupFilter.addEventListener('change', () => filterValidationTable());
         });
 
         let allValidationData = [];
+        let fullValidationStaff = []; // all staff from server (spun + not spun)
 
         async function loadValidationData() {
             try {
@@ -299,6 +313,9 @@
                 const data = await response.json();
 
                 if (data.success) {
+                    // store full staff list and populate filters
+                    fullValidationStaff = data.staff;
+                    populateFilters(data.staff);
                     renderValidationTable(data.staff);
                     calculateStats(data.staff);
                     identifyIssues(data.staff);
@@ -313,20 +330,45 @@
             }
         }
 
+        function populateFilters(staff) {
+            // populate department filter options based on staff who have spun
+            const deptFilter = document.getElementById('deptFilter');
+            if (!deptFilter) return;
+
+            const depts = new Set();
+            staff.forEach(s => { if (s.department) depts.add(s.department); });
+
+            // Clear existing options (keep first "All Departments")
+            const existing = Array.from(deptFilter.querySelectorAll('option'));
+            existing.slice(1).forEach(o => o.remove());
+
+            Array.from(depts).sort().forEach(d => {
+                const opt = document.createElement('option');
+                opt.value = d;
+                opt.textContent = d;
+                deptFilter.appendChild(opt);
+            });
+        }
+
         function renderValidationTable(staff) {
             const tbody = document.getElementById('validationTableBody');
-            
+
             // Filter to show only staff who have spun
             const spunStaff = staff.filter(s => s.hasSpun === true);
             allValidationData = spunStaff;
-            
-            if (spunStaff.length === 0) {
+
+            renderRows(spunStaff);
+        }
+
+        function renderRows(rows) {
+            const tbody = document.getElementById('validationTableBody');
+            if (!rows || rows.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="8" class="no-data">No staff records found</td></tr>';
                 return;
             }
 
             tbody.innerHTML = '';
-            spunStaff.forEach((s, index) => {
+            rows.forEach((s, index) => {
                 const row = document.createElement('tr');
                 const hasSpun = s.hasSpun ? '✓ Yes' : '✗ No';
                 const hasBeenSpun = s.hasBeenSpun ? '✓ Yes' : '✗ No';
@@ -429,47 +471,74 @@
             }
         }
 
-        function filterValidationTable(query) {
-            if (!query) {
-                renderValidationTable(allValidationData);
-                return;
-            }
+        function filterValidationTable() {
+            // unified filter using search, department and group
+            const filtered = getFilteredData();
+            renderRows(filtered);
+        }
 
-            const filtered = allValidationData.filter(s => 
-                s.name.toUpperCase().includes(query) ||
-                s.department.toUpperCase().includes(query) ||
-                (s.spinResult && s.spinResult.toUpperCase().includes(query))
-            );
+        function getFilteredData() {
+            const searchInput = document.getElementById('searchInput');
+            const deptFilter = document.getElementById('deptFilter');
+            const groupFilter = document.getElementById('groupFilter');
 
-            const tbody = document.getElementById('validationTableBody');
-            
-            if (filtered.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="8" class="no-data">No matching records found</td></tr>';
-                return;
-            }
+            const query = searchInput && searchInput.value ? searchInput.value.trim().toUpperCase() : '';
+            const dept = deptFilter ? deptFilter.value : '';
+            const group = groupFilter ? groupFilter.value : '';
 
-            tbody.innerHTML = '';
-            filtered.forEach((s, index) => {
-                const row = document.createElement('tr');
-                const hasSpun = s.hasSpun ? '✓ Yes' : '✗ No';
-                const hasBeenSpun = s.hasBeenSpun ? '✓ Yes' : '✗ No';
-                const isMatched = s.hasSpun && s.hasBeenSpun;
-                const statusBadge = isMatched 
-                    ? '<span class="status-badge status-yes">✓ Matched</span>'
-                    : '<span class="status-badge status-no">✗ Not Matched</span>';
-                const nameSpun = s.spinResult || 'N/A';
+            return allValidationData.filter(s => {
+                if (dept && s.department !== dept) return false;
+                if (group && s.group !== group) return false;
+                if (!query) return true;
 
-                row.innerHTML = `
-                    <td>${index + 1}</td>
-                    <td>${s.name}</td>
-                    <td>${s.department}</td>
-                    <td>${formatGroup(s.group)}</td>
-                    <td>${nameSpun}</td>
-                    <td>${hasSpun}</td>
-                    <td>${hasBeenSpun}</td>
-                    <td>${statusBadge}</td>
-                `;
-                tbody.appendChild(row);
+                const nameMatch = s.name && s.name.toUpperCase().includes(query);
+                const deptMatch = s.department && s.department.toUpperCase().includes(query);
+                const spunMatch = s.spinResult && s.spinResult.toUpperCase().includes(query);
+                return nameMatch || deptMatch || spunMatch;
+            });
+        }
+
+        // Get filtered rows for those who have NOT spun (based on same filters)
+        function getFilteredNotSpunData() {
+            const searchInput = document.getElementById('searchInput');
+            const deptFilter = document.getElementById('deptFilter');
+            const groupFilter = document.getElementById('groupFilter');
+
+            const query = searchInput && searchInput.value ? searchInput.value.trim().toUpperCase() : '';
+            const dept = deptFilter ? deptFilter.value : '';
+            const group = groupFilter ? groupFilter.value : '';
+
+            return fullValidationStaff.filter(s => {
+                if (dept && s.department !== dept) return false;
+                if (group && s.group !== group) return false;
+                if (s.hasSpun) return false; // only those yet to spin
+                if (!query) return true;
+
+                const nameMatch = s.name && s.name.toUpperCase().includes(query);
+                const deptMatch = s.department && s.department.toUpperCase().includes(query);
+                return nameMatch || deptMatch;
+            });
+        }
+
+        // Get filtered rows for ALL staff (spun + not spun) based on current filters
+        function getFilteredAllData() {
+            const searchInput = document.getElementById('searchInput');
+            const deptFilter = document.getElementById('deptFilter');
+            const groupFilter = document.getElementById('groupFilter');
+
+            const query = searchInput && searchInput.value ? searchInput.value.trim().toUpperCase() : '';
+            const dept = deptFilter ? deptFilter.value : '';
+            const group = groupFilter ? groupFilter.value : '';
+
+            return fullValidationStaff.filter(s => {
+                if (dept && s.department !== dept) return false;
+                if (group && s.group !== group) return false;
+                if (!query) return true;
+
+                const nameMatch = s.name && s.name.toUpperCase().includes(query);
+                const deptMatch = s.department && s.department.toUpperCase().includes(query);
+                const spunMatch = s.spinResult && s.spinResult.toUpperCase().includes(query);
+                return nameMatch || deptMatch || spunMatch;
             });
         }
 
@@ -520,6 +589,52 @@
                 'snacks2': 'Snacks Plant'
             };
             return groupMap[group] || group;
+        }
+
+        // Build and download filtered data as Excel (.xlsx) using SheetJS
+        function downloadExcel() {
+            try {
+                // Export all filtered staff (spun + not spun) so caller can see who hasn't spun
+                const rows = getFilteredAllData();
+                if (!rows || rows.length === 0) {
+                    alert('No rows to download. Adjust filters or search first.');
+                    return;
+                }
+
+                // Map rows to simple objects for main sheet (includes 'Yet To Spin')
+                const sheetData = rows.map(r => ({
+                    'Name': r.name || '',
+                    'Department': r.department || '',
+                    'Group': formatGroup(r.group),
+                    'Name Spun': r.spinResult || 'N/A',
+                    'Has Spun': r.hasSpun ? 'Yes' : 'No',
+                    'Has Been Spun': r.hasBeenSpun ? 'Yes' : 'No',
+                    'Yet To Spin': r.hasSpun ? 'No' : 'Yes'
+                }));
+
+                const ws = XLSX.utils.json_to_sheet(sheetData);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, 'Spun');
+
+                // Also add a sheet for those yet to spin based on same filters
+                const notSpun = getFilteredNotSpunData();
+                if (notSpun && notSpun.length > 0) {
+                    const notSpunData = notSpun.map(r => ({
+                        'Name': r.name || '',
+                        'Department': r.department || '',
+                        'Group': formatGroup(r.group),
+                        'Has Spun': 'No'
+                    }));
+                    const ws2 = XLSX.utils.json_to_sheet(notSpunData);
+                    XLSX.utils.book_append_sheet(wb, ws2, 'YetToSpin');
+                }
+
+                const fileName = `validation-${new Date().toISOString().slice(0,10)}.xlsx`;
+                XLSX.writeFile(wb, fileName);
+            } catch (err) {
+                console.error('Download error:', err);
+                alert('Failed to generate Excel file.');
+            }
         }
     </script>
 </body>

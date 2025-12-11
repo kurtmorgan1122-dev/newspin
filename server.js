@@ -67,7 +67,10 @@ const staffSchema = new mongoose.Schema({
   spinResult: { type: String, default: null },
   spinResultGroup: { type: String, default: null },
   giftShared: { type: String, default: 'No' },
-  hasBeenSpun: { type: Boolean, default: false }
+  hasBeenSpun: { type: Boolean, default: false },
+  // For accounts created via the admin one-time ID generator
+  isOneTimeId: { type: Boolean, default: false },
+  oneTimeRemaining: { type: Number, default: 0 }
 });
 
 const Staff = mongoose.model('Staff', staffSchema);
@@ -146,10 +149,15 @@ app.get('/api/lookup-employee/:employeeId', async (req, res) => {
       return res.status(404).json({ success: false, message: 'Employee ID not found' });
     }
 
+    // Also return spin status and one-time ID metadata so the client can
+    // disable login for users who already spun (unless they have a one-time extra use).
     res.json({ 
       success: true, 
       name: staff.name, 
-      department: staff.department 
+      department: staff.department,
+      hasSpun: !!staff.hasSpun,
+      isOneTimeId: !!staff.isOneTimeId,
+      oneTimeRemaining: typeof staff.oneTimeRemaining === 'number' ? staff.oneTimeRemaining : 0
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -197,10 +205,8 @@ app.post('/api/login', async (req, res) => {
       return res.status(404).json({ success: false, message: 'Employee ID not found' });
     }
 
-    if (staff.hasSpun) {
-      return res.status(400).json({ success: false, message: 'You have already spun!' });
-    }
-
+    // Allow login for everyone (including those who have already spun).
+    // Do not leak prior-spin state here — the client should treat the interaction as a fresh spin.
     res.json({ success: true, staff: staff });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -245,14 +251,16 @@ app.post('/api/admin/generate-id', async (req, res) => {
       oneTimeId = (Math.floor(10000000 + Math.random() * 90000000)).toString();
     } while (await Staff.findOne({ employeeId: oneTimeId }));
 
-    // Create or update staff with the generated ID
+    // Create or update staff with the generated ID and mark as one-time
     const staff = await Staff.findOneAndUpdate(
       { name: name.toUpperCase().trim(), department: department.trim() },
       {
         name: name.toUpperCase().trim(),
         department: department.trim(),
         group: group,
-        employeeId: oneTimeId
+        employeeId: oneTimeId,
+        isOneTimeId: true,
+        oneTimeRemaining: 1
       },
       { upsert: true, new: true }
     );
@@ -278,8 +286,33 @@ app.post('/api/spin', async (req, res) => {
       return res.status(404).json({ success: false, message: 'Staff not found in this department' });
     }
 
+    // Handle repeat-spin cases: normally we refuse repeat spins, but allow
+    // one extra replay for accounts created with a one-time ID (if remaining).
     if (spinner.hasSpun) {
-      return res.status(400).json({ success: false, message: 'Already spun' });
+      if (spinner.isOneTimeId && spinner.oneTimeRemaining > 0) {
+        // Consume one remaining extra use and return the same assigned result
+        await Staff.findByIdAndUpdate(spinner._id, { $inc: { oneTimeRemaining: -1 } });
+
+        const spunStaff = await Staff.findOne({ name: spinner.spinResult });
+        const result = spunStaff
+          ? { name: spunStaff.name, department: spunStaff.department, group: spunStaff.group }
+          : { name: spinner.spinResult || 'N/A', department: 'N/A', group: spinner.spinResultGroup || 'N/A' };
+
+        try {
+          io.emit('spinReplay', {
+            spinnerId: spinner._id,
+            spinnerName: spinner.name,
+            spunName: result.name,
+            spunGroup: result.group
+          });
+        } catch (e) {
+          console.error('Socket emit error (replay):', e.message);
+        }
+
+        return res.json({ success: true, spinResult: result });
+      }
+
+      return res.status(400).json({ success: false, message: 'You have already spun. Each person may spin only once.' });
     }
 
     // First, try to get staff who have already spun (hasSpun: true, hasBeenSpun: false)
@@ -616,6 +649,35 @@ app.post('/api/admin/fix-unmatched', async (req, res) => {
     });
   } catch (error) {
     console.error('Error in fix-unmatched:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Admin: Reset a specific user by employeeId (for testing)
+app.post('/api/admin/reset-user/:employeeId', async (req, res) => {
+  try {
+    const { employeeId } = req.params;
+    const staff = await Staff.findOneAndUpdate(
+      { employeeId: employeeId.trim() },
+      {
+        hasSpun: false,
+        spinResult: null,
+        spinResultGroup: null,
+        hasBeenSpun: false,
+        giftShared: 'No'
+      },
+      { new: true }
+    );
+
+    if (!staff) {
+      return res.status(404).json({ success: false, message: 'Staff not found' });
+    }
+
+    io.emit('staffUpdated', { action: 'resetUser', employeeId: staff.employeeId });
+
+    res.json({ success: true, message: 'Staff reset for testing', staff });
+  } catch (error) {
+    console.error('Error in reset-user:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 });

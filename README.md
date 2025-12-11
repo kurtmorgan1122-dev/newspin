@@ -48,9 +48,9 @@ npm start
 ```
 
 5. **Access the application:**
-   - Spinner page: `http://0.0.0.0:3000/spinner.html`
-   - Admin portal: `http://0.0.0.0:3000/admin.html`
-   - Remind Me portal: `http://0.0.0.0:3000/RemindMe.html`
+   - Spinner page: `http://localhost:3000/spinner.html`
+   - Admin portal: `http://localhost:3000/admin.html`
+   - Remind Me portal: `http://localhost:3000/RemindMe.html`
 
 ## Excel File Format
 

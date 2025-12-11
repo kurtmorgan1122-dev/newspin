@@ -350,6 +350,7 @@ body {
     padding: 20px 15px;
     position: relative;
     overflow: hidden;
+    background: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.4)), url('https://images.unsplash.com/photo-1543589077-47d81606c1bf?w=1920') center/cover fixed;
 }
 
 .spinner-container::before {
@@ -365,7 +366,7 @@ body {
         linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.4)),
         url('https://images.unsplash.com/photo-1544024961-e5878dfdd3f1?w=1920') right center/50% 100% no-repeat;
     animation: spinnerSlideBackground 24s infinite;
-    z-index: -1;
+    z-index: -2;
 }
 
 @keyframes spinnerSlideBackground {

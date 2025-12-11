@@ -48,6 +48,8 @@ function setupEventListeners() {
             nameInput.value = '';
             departmentInput.value = '';
             errorElement.textContent = '';
+            loginBtn.disabled = true;
+            loginBtn.classList.add('disabled');
             return;
         }
 
@@ -59,9 +61,28 @@ function setupEventListeners() {
                 nameInput.value = data.name;
                 departmentInput.value = data.department;
                 errorElement.textContent = '';
+
+                // Disable the login button if the user has already spun and
+                // they do NOT have a one-time extra use remaining.
+                const hasSpun = !!data.hasSpun;
+                const isOneTime = !!data.isOneTimeId;
+                const remaining = Number(data.oneTimeRemaining || 0);
+
+                if (hasSpun && !(isOneTime && remaining > 0)) {
+                    loginBtn.disabled = true;
+                    loginBtn.classList.add('disabled');
+                    errorElement.textContent = 'You have already spun and cannot spin again.';
+                } else {
+                    loginBtn.disabled = false;
+                    loginBtn.classList.remove('disabled');
+                    if (hasSpun && isOneTime && remaining > 0) {
+                        errorElement.textContent = 'This one-time ID allows one extra spin.';
+                    }
+                }
             } else {
                 nameInput.value = '';
                 departmentInput.value = '';
+                loginBtn.disabled = true;
                 errorElement.textContent = data.message || 'Employee ID not found';
             }
         } catch (error) {
@@ -94,11 +115,15 @@ function setupEventListeners() {
 
     // Login button
     loginBtn.addEventListener('click', handleLogin);
+    // Start with login disabled until a valid ID is entered
+    loginBtn.disabled = true;
+    loginBtn.classList.add('disabled');
 
     // Ready button
     readyBtn.addEventListener('click', () => {
         document.getElementById('readyOverlay').classList.add('hidden');
         document.getElementById('spinnerSection').classList.remove('hidden');
+        // Always present as a fresh spin to the user
         document.getElementById('welcomeText').textContent = 
             `Welcome ${currentStaff.name}! Click the spinner to discover your Secret Santa match! 🎁`;
     });
@@ -134,6 +159,7 @@ async function handleLogin() {
 
         if (data.success) {
             currentStaff = data.staff;
+            // Do NOT expose respin information to the user — treat as a fresh spin
             document.getElementById('loginSection').style.display = 'none';
             document.getElementById('readyOverlay').classList.remove('hidden');
         } else {
@@ -239,10 +265,33 @@ async function handleSpin() {
 function showResult(spinResult) {
     document.getElementById('resultName').textContent = spinResult.name;
     document.getElementById('resultDepartment').textContent = `Department: ${spinResult.department}`;
-    document.getElementById('resultGroup').textContent = `Group: ${spinResult.group}`;
+    // Map internal group keys to friendly display names
+    function formatGroup(group) {
+        if (!group) return 'N/A';
+        const map = {
+            'dairies': 'Dairies Plant',
+            'swan': 'SWAN Plant',
+            'snacks1': 'Snacks Plant',
+            'snacks2': 'Snacks Plant'
+        };
+        return map[group] || group;
+    }
+
+    document.getElementById('resultGroup').textContent = `Group: ${formatGroup(spinResult.group)}`;
     const resultOverlay = document.getElementById('resultOverlay');
     resultOverlay.classList.remove('hidden');
     const resultCard = resultOverlay.querySelector('.result-card');
     resultCard.classList.add('zoom-in');
     isSpinning = false; // Reset spinning flag
+
+    // Disable further spins for this session (user already spun)
+    try {
+        const spinner = document.getElementById('spinner');
+        if (spinner) {
+            spinner.removeEventListener('click', handleSpin);
+            spinner.classList.add('disabled');
+        }
+    } catch (e) {
+        // no-op
+    }
 }
