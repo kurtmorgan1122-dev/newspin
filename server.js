@@ -315,21 +315,36 @@ app.post('/api/spin', async (req, res) => {
       return res.status(400).json({ success: false, message: 'You have already spun. Each person may spin only once.' });
     }
 
-    // First, try to get staff who have already spun (hasSpun: true, hasBeenSpun: false)
-    let availableStaff = await Staff.find({ 
+    // First, try to get staff who have already spun (waiting list: hasSpun: true, hasBeenSpun: false)
+    // but SKIP anyone in the same department as the spinner to avoid same-dept pairs
+    let waitingList = await Staff.find({ 
       hasSpun: true,
       hasBeenSpun: false,
       group: spinner.group,
-      _id: { $ne: staffId }
+      _id: { $ne: staffId },
+      department: { $ne: spinner.department } // Skip same department
     });
 
-    // If no one who has spun is available, fall back to those who haven't spun
+    let availableStaff = waitingList;
+
+    // If no one who has spun (and different dept) is available, 
+    // fall back to those who haven't spun yet (from the same group, exclude same dept if possible)
     if (availableStaff.length === 0) {
       availableStaff = await Staff.find({ 
         hasBeenSpun: false,
         group: spinner.group,
-        _id: { $ne: staffId }
+        _id: { $ne: staffId },
+        department: { $ne: spinner.department } // Prefer different departments
       });
+      
+      // If still none, allow same department as last resort
+      if (availableStaff.length === 0) {
+        availableStaff = await Staff.find({ 
+          hasBeenSpun: false,
+          group: spinner.group,
+          _id: { $ne: staffId }
+        });
+      }
     }
 
     if (availableStaff.length === 0) {
