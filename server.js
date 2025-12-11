@@ -697,6 +697,17 @@ app.post('/api/admin/reset-user/:employeeId', async (req, res) => {
   }
 });
 
+// Admin: Broadcast a re-login event to all connected admin clients
+app.post('/api/admin/broadcast-relogin', async (req, res) => {
+  try {
+    io.emit('requireAdminLogin');
+    res.json({ success: true, message: 'Broadcast sent' });
+  } catch (error) {
+    console.error('Error broadcasting relogin:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 const PORT = process.env.PORT || 3000;
 http.listen(PORT, () => {
   console.log(`Server (with sockets) running on port ${PORT}`);

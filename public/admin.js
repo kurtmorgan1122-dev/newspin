@@ -8,9 +8,14 @@ let totalPages = 1;
 
 // Load data on page load
 window.addEventListener('DOMContentLoaded', () => {
-    loadStats();
-    loadStaffTable();
-    restoreStaffManagementSectionState();
+    // Require admin login before loading data
+    ensureAdminAuthenticated().then(authenticated => {
+        if (authenticated) {
+            loadStats();
+            loadStaffTable();
+            restoreStaffManagementSectionState();
+        }
+    });
     
     // Add search input listener
     const searchInput = document.getElementById('searchInput');
@@ -322,6 +327,11 @@ if (window.__io) {
         // Reload the current page to include the newly completed spin
         loadStaffTable(currentPage);
     });
+    // If server asks all admin clients to re-authenticate, show login overlay
+    window.__io.on('requireAdminLogin', () => {
+        localStorage.removeItem('adminLoggedIn');
+        showAdminLoginOverlay();
+    });
 } else {
     // Try to connect if socket wasn't created in HTML
     try {
@@ -335,3 +345,106 @@ if (window.__io) {
         console.warn('Socket.IO not available for admin real-time updates');
     }
 }
+
+// Admin auth helpers
+const ADMIN_USER = 'UFL_ADMIN';
+const ADMIN_PASS = 'Ayeni12#';
+
+function showAdminLoginOverlay() {
+    const overlay = document.getElementById('adminLoginOverlay');
+    if (overlay) overlay.style.display = 'flex';
+}
+
+function hideAdminLoginOverlay() {
+    const overlay = document.getElementById('adminLoginOverlay');
+    if (overlay) overlay.style.display = 'none';
+}
+
+async function ensureAdminAuthenticated() {
+    // If localStorage flag exists, allow (persist across reloads)
+    if (localStorage.getItem('adminLoggedIn') === 'true') {
+        // ensure overlay hidden if previously shown
+        hideAdminLoginOverlay();
+        return true;
+    }
+
+    // show overlay and wire up handlers
+    showAdminLoginOverlay();
+    const loginBtn = document.getElementById('adminLoginBtn');
+    const usernameInput = document.getElementById('adminUsername');
+    const passwordInput = document.getElementById('adminPassword');
+    const errorEl = document.getElementById('adminLoginError');
+
+    return new Promise((resolve) => {
+        function attemptLogin() {
+            const u = (usernameInput.value || '').trim();
+            const p = (passwordInput.value || '');
+            if (u === ADMIN_USER && p === ADMIN_PASS) {
+                localStorage.setItem('adminLoggedIn', 'true');
+                hideAdminLoginOverlay();
+                errorEl.style.display = 'none';
+                resolve(true);
+            } else {
+                errorEl.textContent = 'Invalid username or password';
+                errorEl.style.display = 'block';
+                // Don't resolve; allow the user to try again
+            }
+        }
+
+        loginBtn.addEventListener('click', attemptLogin);
+
+        // allow Enter key
+        [usernameInput, passwordInput].forEach(el => el.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') attemptLogin();
+        }));
+    });
+}
+
+// Fallback global login function bound from the button to ensure clicks always work
+function adminAttemptLogin() {
+    const usernameInput = document.getElementById('adminUsername');
+    const passwordInput = document.getElementById('adminPassword');
+    const errorEl = document.getElementById('adminLoginError');
+    const u = (usernameInput.value || '').trim();
+    const p = (passwordInput.value || '');
+    if (u === ADMIN_USER && p === ADMIN_PASS) {
+        localStorage.setItem('adminLoggedIn', 'true');
+        hideAdminLoginOverlay();
+        errorEl.style.display = 'none';
+        // Immediately load admin data in case the original promise wasn't resolved
+        loadStats();
+        loadStaffTable();
+        restoreStaffManagementSectionState();
+        return true;
+    } else {
+        errorEl.textContent = 'Invalid username or password';
+        errorEl.style.display = 'block';
+        return false;
+    }
+}
+
+    // Broadcast re-login to all connected admin clients
+    async function broadcastRequireAdminLogin() {
+        if (!confirm('Force all connected admin pages to re-prompt for credentials?')) return;
+        try {
+            const response = await fetch(`${API_URL}/admin/broadcast-relogin`, { method: 'POST' });
+            const data = await response.json();
+            if (data.success) {
+                alert('Broadcast sent — all admin clients will be prompted to re-login.');
+                // Also locally clear session to demonstrate
+                localStorage.removeItem('adminLoggedIn');
+                showAdminLoginOverlay();
+            } else {
+                alert('Error: ' + (data.message || 'Unknown'));
+            }
+        } catch (err) {
+            console.error('Broadcast error:', err);
+            alert('Failed to send broadcast.');
+        }
+    }
+
+    function adminLogout() {
+        if (!confirm('Log out of the admin portal?')) return;
+        localStorage.removeItem('adminLoggedIn');
+        showAdminLoginOverlay();
+    }

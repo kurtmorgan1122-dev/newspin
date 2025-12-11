@@ -7,10 +7,36 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body class="admin-page">
+    <!-- Admin Login Overlay -->
+    <div id="adminLoginOverlay" class="overlay hidden">
+        <div class="result-card" style="max-width:420px;">
+            <h2 style="margin-top:0;">Admin Sign In</h2>
+            <p style="color:#666; font-size:13px;">Enter your admin credentials to access the portal.</p>
+            <div style="margin-top:12px;">
+                <div class="form-group">
+                    <label for="adminUsername">Username</label>
+                    <input id="adminUsername" type="text" placeholder="Username" style="width:100%; padding:8px; border-radius:6px; border:1px solid #ddd;">
+                </div>
+                <div class="form-group">
+                    <label for="adminPassword">Password</label>
+                    <input id="adminPassword" type="password" placeholder="Password" style="width:100%; padding:8px; border-radius:6px; border:1px solid #ddd;">
+                </div>
+                <p id="adminLoginError" style="color:#c41e3a; font-size:13px; display:none;"></p>
+                <div style="display:flex; gap:10px; margin-top:12px;">
+                    <button id="adminLoginBtn" class="btn-primary" style="flex:1;" onclick="adminAttemptLogin()">Sign In</button>
+                    <button id="adminLogoutForceBtn" class="btn-upload" style="background:#c41e3a; display:none;">Force Logout</button>
+                </div>
+            </div>
+        </div>
+    </div>
     <div class="admin-container">
         <header class="admin-header">
             <h1>🎄 UFL Christmas Secret Santa - Admin Portal 🎅</h1>
-            <button onclick="window.location.href='validation.html'" style="margin-top: 15px; padding: 10px 20px; background: white; color: #c41e3a; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-family: Georgia, serif;">📊 End-to-End Validation</button>
+            <div style="margin-top:15px; display:flex; gap:10px; align-items:center;">
+                <button onclick="window.location.href='validation.html'" style="padding: 10px 20px; background: white; color: #c41e3a; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-family: Georgia, serif;">📊 End-to-End Validation</button>
+                <button id="forceReloginBtn" onclick="broadcastRequireAdminLogin()" style="padding:10px 18px; background:#ff6b6b; color:white; border:none; border-radius:8px; cursor:pointer; font-weight:bold;">🔒 Force Admin Re-login</button>
+                <button id="adminLogoutBtn" onclick="adminLogout()" style="padding:10px 18px; background:#666; color:white; border:none; border-radius:8px; cursor:pointer; font-weight:bold;">⎋ Logout</button>
+            </div>
         </header>
 
         <!-- Stats Section -->
