@@ -115,7 +115,7 @@ app.post('/api/upload/:group', upload.single('file'), async (req, res) => {
       return {
         employeeId: String(employeeIdValue).trim(),
         name: String(nameValue).toUpperCase().trim(),
-        department: String(deptValue).trim(),
+        department: String(deptValue).toUpperCase().trim(),
         group: group
       };
     }).filter(item => item !== null); // Remove any null entries
@@ -252,11 +252,13 @@ app.post('/api/admin/generate-id', async (req, res) => {
     } while (await Staff.findOne({ employeeId: oneTimeId }));
 
     // Create or update staff with the generated ID and mark as one-time
+    const normalizedDept = department.trim().toUpperCase();
+
     const staff = await Staff.findOneAndUpdate(
-      { name: name.toUpperCase().trim(), department: department.trim() },
+      { name: name.toUpperCase().trim(), department: normalizedDept },
       {
         name: name.toUpperCase().trim(),
-        department: department.trim(),
+        department: normalizedDept,
         group: group,
         employeeId: oneTimeId,
         isOneTimeId: true,
@@ -276,11 +278,30 @@ app.post('/api/admin/generate-id', async (req, res) => {
   }
 });
 
+// Admin: Normalize existing department values to uppercase (one-time run)
+app.post('/api/admin/normalize-departments', async (req, res) => {
+  try {
+    const staffs = await Staff.find({});
+    let updated = 0;
+    for (const s of staffs) {
+      const norm = s.department ? s.department.toUpperCase().trim() : '';
+      if (s.department !== norm) {
+        s.department = norm;
+        await s.save();
+        updated++;
+      }
+    }
+
+    res.json({ success: true, message: `Normalized ${updated} staff department(s) to uppercase` });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 // Spin endpoint
 app.post('/api/spin', async (req, res) => {
   try {
     const { staffId } = req.body;
-    
     const spinner = await Staff.findById(staffId);
     if (!spinner) {
       return res.status(404).json({ success: false, message: 'Staff not found in this department' });
