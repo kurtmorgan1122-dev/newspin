@@ -349,7 +349,7 @@ app.post('/api/spin', async (req, res) => {
     if (waitingList.length === 0) {
       return res.status(400).json({ 
         success: false, 
-        message: 'No staff available for matching at the moment. Please try again later. You can use your ID again when there are more participants.' 
+        message: 'Sorry, there is currently no staff in the waiting list to match with you. This means either you are among the first to spin from your group, or everyone in the waiting list has already been matched. Please try again later when more people have participated in the draw. You can use your ID multiple times until you get a match.' 
       });
     }
 
