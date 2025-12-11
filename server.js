@@ -479,6 +479,147 @@ app.post('/api/admin/reset-spin/:id', async (req, res) => {
   }
 });
 
+// Admin: End-to-End Validation - Get all staff with spin status
+app.get('/api/admin/validation', async (req, res) => {
+  try {
+    const staff = await Staff.find({})
+      .select('name department group spinResult hasBeenSpun hasSpun')
+      .sort({ name: 1 });
+    
+    res.json({ success: true, staff });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Admin: Reset all hasBeenSpun to false (for testing)
+app.post('/api/admin/reset-been-spun', async (req, res) => {
+  try {
+    await Staff.updateMany({}, { hasBeenSpun: false });
+    
+    io.emit('staffUpdated', { action: 'resetBeenSpun' });
+
+    res.json({ 
+      success: true, 
+      message: 'All staff hasBeenSpun status reset to false'
+    });
+  } catch (error) {
+    console.error('Error in reset-been-spun:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Admin: Fix unmatched staff - Revert their spins and randomly re-match them together (within same group)
+app.post('/api/admin/fix-unmatched', async (req, res) => {
+  try {
+    // Find all staff who spun but haven't been spun
+    const unmatchedStaff = await Staff.find({ 
+      hasSpun: true, 
+      hasBeenSpun: false 
+    });
+
+    console.log(`Found ${unmatchedStaff.length} unmatched staff`);
+
+    if (unmatchedStaff.length === 0) {
+      return res.json({ success: true, message: 'No unmatched staff to fix' });
+    }
+
+    const unmatchedIds = unmatchedStaff.map(s => s._id);
+
+    // Step 1: For each unmatched person, revert the person they spun
+    for (const unmatched of unmatchedStaff) {
+      if (unmatched.spinResult && unmatched.spinResult !== 'N/A') {
+        await Staff.updateOne(
+          { name: unmatched.spinResult },
+          { hasBeenSpun: false }
+        );
+      }
+    }
+
+    console.log('Reverted previous spin assignments');
+
+    // Step 2: Clear their current spin results
+    await Staff.updateMany(
+      { _id: { $in: unmatchedIds } },
+      { spinResult: null, spinResultGroup: null }
+    );
+
+    console.log('Cleared spin results');
+
+    // Step 3: Refetch unmatched staff to get fresh data
+    const refreshedUnmatched = await Staff.find({ 
+      _id: { $in: unmatchedIds }
+    });
+
+    // Step 4: Group unmatched staff by their group
+    const groupedByGroup = {};
+    refreshedUnmatched.forEach(staff => {
+      if (!groupedByGroup[staff.group]) {
+        groupedByGroup[staff.group] = [];
+      }
+      groupedByGroup[staff.group].push(staff);
+    });
+
+    console.log('Grouped unmatched staff by group:', Object.keys(groupedByGroup));
+
+    // Step 5: For each group, shuffle and create circular matching within that group
+    const bulkOps = [];
+
+    for (const group in groupedByGroup) {
+      const groupStaff = groupedByGroup[group];
+      const shuffled = [...groupStaff].sort(() => Math.random() - 0.5);
+
+      console.log(`Processing group '${group}' with ${shuffled.length} staff`);
+
+      // Create circular matching within this group
+      for (let i = 0; i < shuffled.length; i++) {
+        const currentPerson = shuffled[i];
+        const targetIndex = (i + 1) % shuffled.length;
+        const targetPerson = shuffled[targetIndex];
+
+        // Update current person's spin result
+        bulkOps.push({
+          updateOne: {
+            filter: { _id: currentPerson._id },
+            update: { 
+              $set: {
+                spinResult: targetPerson.name,
+                spinResultGroup: targetPerson.group
+              }
+            }
+          }
+        });
+
+        // Mark target person as hasBeenSpun
+        bulkOps.push({
+          updateOne: {
+            filter: { _id: targetPerson._id },
+            update: { $set: { hasBeenSpun: true } }
+          }
+        });
+      }
+    }
+
+    // Execute all updates at once
+    if (bulkOps.length > 0) {
+      await Staff.bulkWrite(bulkOps);
+    }
+
+    console.log('Successfully updated all staff within their groups');
+
+    // Emit socket event to update admin
+    io.emit('staffUpdated', { action: 'fixUnmatched', count: refreshedUnmatched.length });
+
+    res.json({ 
+      success: true, 
+      message: `Successfully re-matched ${refreshedUnmatched.length} unmatched staff members within their respective groups`
+    });
+  } catch (error) {
+    console.error('Error in fix-unmatched:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 const PORT = process.env.PORT || 3000;
 http.listen(PORT, () => {
   console.log(`Server (with sockets) running on port ${PORT}`);

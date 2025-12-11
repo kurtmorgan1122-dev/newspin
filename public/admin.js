@@ -52,7 +52,7 @@ async function loadStaffTable(page = 1, search = '') {
             tbody.innerHTML = '';
             
             if (data.staff.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" class="no-data">No spin records yet</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8" class="no-data">No spin records yet</td></tr>';
             } else {
                 data.staff.forEach((staff, index) => {
                     const row = document.createElement('tr');
@@ -61,6 +61,7 @@ async function loadStaffTable(page = 1, search = '') {
                     row.innerHTML = `
                         <td>${serialNumber}</td>
                         <td>${staff.name}</td>
+                        <td>${staff.department || 'N/A'}</td>
                         <td>${staff.spinResult || 'N/A'}</td>
                         <td>${staff.spinResultDept || 'N/A'}</td>
                         <td>${formatGroup(staff.spinResultGroup)}</td>

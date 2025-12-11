@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>End-to-End Validation - UFL Christmas Spinner</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .validation-page {
+            background: #f5f5f5;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .validation-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .validation-header {
+            background: linear-gradient(135deg, #c41e3a, #165b33);
+            color: white;
+            padding: 25px 20px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        .validation-header h1 {
+            font-size: 22px;
+            margin-bottom: 10px;
+        }
+
+        .validation-header p {
+            font-size: 13px;
+            margin: 0;
+        }
+
+        .back-btn {
+            display: inline-block;
+            margin-bottom: 20px;
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #c41e3a, #165b33);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: Georgia, serif;
+            font-weight: bold;
+            transition: opacity 0.2s;
+        }
+
+        .back-btn:hover {
+            opacity: 0.8;
+        }
+
+        .validation-table-section {
+            background: white;
+            padding: 25px 20px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .validation-table-section h2 {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .validation-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            min-width: 600px;
+        }
+
+        .validation-table th,
+        .validation-table td {
+            padding: 12px 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .validation-table th {
+            background: #f8f8f8;
+            font-weight: bold;
+            color: #333;
+            font-size: 12px;
+        }
+
+        .validation-table tr:hover {
+            background: #f9f9f9;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 11px;
+        }
+
+        .status-yes {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-no {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .no-data {
+            text-align: center;
+            color: #999;
+            padding: 40px !important;
+            font-size: 13px;
+        }
+
+        .summary-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .summary-card {
+            background: white;
+            padding: 20px 15px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .summary-card h3 {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .summary-number {
+            font-size: 28px;
+            font-weight: bold;
+            color: #c41e3a;
+        }
+
+        .issues-section {
+            margin-top: 30px;
+            background: white;
+            padding: 25px 20px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .issues-section h2 {
+            font-size: 18px;
+            color: #c41e3a;
+            margin-bottom: 15px;
+        }
+
+        .issue-item {
+            padding: 12px;
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            font-size: 13px;
+        }
+
+        .issue-item strong {
+            color: #856404;
+        }
+
+        .fix-btn {
+            padding: 12px 20px;
+            background: linear-gradient(135deg, #c41e3a, #165b33);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: Georgia, serif;
+            font-weight: bold;
+            font-size: 14px;
+            transition: opacity 0.2s;
+        }
+
+        .fix-btn:hover {
+            opacity: 0.8;
+        }
+
+        .fix-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body class="validation-page">
+    <div class="validation-container">
+        <button class="back-btn" onclick="window.history.back();">← Back to Admin</button>
+
+        <div class="validation-header">
+            <h1>📊 End-to-End Validation</h1>
+            <p>Verify that everyone who spun has also been spun by someone else</p>
+        </div>
+
+        <!-- Summary Stats -->
+        <div class="summary-stats">
+            <div class="summary-card">
+                <h3>Total Spun</h3>
+                <p class="summary-number" id="totalSpun">0</p>
+            </div>
+            <div class="summary-card">
+                <h3>Matched (Both Spun)</h3>
+                <p class="summary-number" id="matchedCount">0</p>
+            </div>
+            <div class="summary-card">
+                <h3>Unmatched (Not Spun)</h3>
+                <p class="summary-number" id="unmatchedCount">0</p>
+            </div>
+            <div class="summary-card">
+                <h3>Match Rate</h3>
+                <p class="summary-number" id="matchRate">0%</p>
+            </div>
+        </div>
+
+        <!-- Validation Table -->
+        <div class="validation-table-section">
+            <h2>🎄 Spin Validation Table</h2>
+            <div style="margin-bottom: 15px; display: flex; gap: 10px; align-items: center;">
+                <input 
+                    type="text" 
+                    id="searchInput" 
+                    placeholder="Search by name..." 
+                    style="padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; flex: 1; font-size: 13px;"
+                />
+                <button class="fix-btn" id="resetBtn" onclick="resetBeenSpun()" style="background: #666;">
+                    🔄 Reset for Testing
+                </button>
+                <button class="fix-btn" id="fixUnmatchedBtn" onclick="fixUnmatched()" style="display: none;">
+                    🔧 Fix Unmatched Staff
+                </button>
+            </div>
+            <div class="table-container">
+                <table class="validation-table">
+                    <thead>
+                        <tr>
+                            <th>S/N</th>
+                            <th>Name</th>
+                            <th>Department</th>
+                            <th>Group</th>
+                            <th>Name Spun</th>
+                            <th>Has Spun</th>
+                            <th>Has Been Spun</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="validationTableBody">
+                        <tr>
+                            <td colspan="7" class="no-data">Loading...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Issues Section -->
+        <div class="issues-section" id="issuesSection" style="display: none;">
+            <h2>⚠️ Potential Issues</h2>
+            <div id="issuesList"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = '/api';
+
+        window.addEventListener('DOMContentLoaded', () => {
+            loadValidationData();
+            
+            // Add search input listener
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) {
+                searchInput.addEventListener('input', (e) => {
+                    const query = e.target.value.trim().toUpperCase();
+                    filterValidationTable(query);
+                });
+            }
+        });
+
+        let allValidationData = [];
+
+        async function loadValidationData() {
+            try {
+                const response = await fetch(`${API_URL}/admin/validation`);
+                const data = await response.json();
+
+                if (data.success) {
+                    renderValidationTable(data.staff);
+                    calculateStats(data.staff);
+                    identifyIssues(data.staff);
+                } else {
+                    document.getElementById('validationTableBody').innerHTML = 
+                        '<tr><td colspan="7" class="no-data">Error loading data</td></tr>';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('validationTableBody').innerHTML = 
+                    '<tr><td colspan="7" class="no-data">Connection error</td></tr>';
+            }
+        }
+
+        function renderValidationTable(staff) {
+            const tbody = document.getElementById('validationTableBody');
+            
+            // Filter to show only staff who have spun
+            const spunStaff = staff.filter(s => s.hasSpun === true);
+            allValidationData = spunStaff;
+            
+            if (spunStaff.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="no-data">No staff records found</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = '';
+            spunStaff.forEach((s, index) => {
+                const row = document.createElement('tr');
+                const hasSpun = s.hasSpun ? '✓ Yes' : '✗ No';
+                const hasBeenSpun = s.hasBeenSpun ? '✓ Yes' : '✗ No';
+                const isMatched = s.hasSpun && s.hasBeenSpun;
+                const statusBadge = isMatched 
+                    ? '<span class="status-badge status-yes">✓ Matched</span>'
+                    : '<span class="status-badge status-no">✗ Not Matched</span>';
+                const nameSpun = s.spinResult || 'N/A';
+
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${s.name}</td>
+                    <td>${s.department}</td>
+                    <td>${formatGroup(s.group)}</td>
+                    <td>${nameSpun}</td>
+                    <td>${hasSpun}</td>
+                    <td>${hasBeenSpun}</td>
+                    <td>${statusBadge}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function calculateStats(staff) {
+            const totalSpun = staff.filter(s => s.hasSpun).length;
+            const matched = staff.filter(s => s.hasSpun && s.hasBeenSpun).length;
+            const unmatched = totalSpun - matched;
+            const matchRate = totalSpun > 0 ? Math.round((matched / totalSpun) * 100) : 0;
+
+            document.getElementById('totalSpun').textContent = totalSpun;
+            document.getElementById('matchedCount').textContent = matched;
+            document.getElementById('unmatchedCount').textContent = unmatched;
+            document.getElementById('matchRate').textContent = matchRate + '%';
+        }
+
+        function identifyIssues(staff) {
+            const unmatchedSpinners = staff.filter(s => s.hasSpun && !s.hasBeenSpun);
+            
+            if (unmatchedSpinners.length === 0) {
+                return; // No issues
+            }
+
+            const issuesSection = document.getElementById('issuesSection');
+            const issuesList = document.getElementById('issuesList');
+            
+            issuesList.innerHTML = '';
+            unmatchedSpinners.forEach(s => {
+                const issueDiv = document.createElement('div');
+                issueDiv.className = 'issue-item';
+                issueDiv.innerHTML = `
+                    <strong>${s.name}</strong> (${s.department}) from ${formatGroup(s.group)} 
+                    has spun someone but has not been spun by anyone else.
+                `;
+                issuesList.appendChild(issueDiv);
+            });
+
+            issuesSection.style.display = 'block';
+            
+            // Show fix button if there are unmatched staff
+            if (unmatchedSpinners.length > 0) {
+                document.getElementById('fixUnmatchedBtn').style.display = 'inline-block';
+            }
+        }
+
+        async function fixUnmatched() {
+            const fixBtn = document.getElementById('fixUnmatchedBtn');
+            fixBtn.disabled = true;
+            fixBtn.textContent = '⏳ Processing...';
+
+            try {
+                console.log('Sending fix-unmatched request...');
+                const response = await fetch(`${API_URL}/admin/fix-unmatched`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                console.log('Response status:', response.status);
+                const data = await response.json();
+                console.log('Response data:', data);
+
+                if (data.success) {
+                    alert('✅ Success! Unmatched staff have been re-matched with each other.');
+                    fixBtn.style.display = 'none';
+                    fixBtn.disabled = false;
+                    fixBtn.textContent = '🔧 Fix Unmatched Staff';
+                    // Reload validation data
+                    loadValidationData();
+                } else {
+                    alert('❌ Error: ' + data.message);
+                    fixBtn.disabled = false;
+                    fixBtn.textContent = '🔧 Fix Unmatched Staff';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('❌ Connection error: ' + error.message);
+                fixBtn.disabled = false;
+                fixBtn.textContent = '🔧 Fix Unmatched Staff';
+            }
+        }
+
+        function filterValidationTable(query) {
+            if (!query) {
+                renderValidationTable(allValidationData);
+                return;
+            }
+
+            const filtered = allValidationData.filter(s => 
+                s.name.toUpperCase().includes(query) ||
+                s.department.toUpperCase().includes(query) ||
+                (s.spinResult && s.spinResult.toUpperCase().includes(query))
+            );
+
+            const tbody = document.getElementById('validationTableBody');
+            
+            if (filtered.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="no-data">No matching records found</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = '';
+            filtered.forEach((s, index) => {
+                const row = document.createElement('tr');
+                const hasSpun = s.hasSpun ? '✓ Yes' : '✗ No';
+                const hasBeenSpun = s.hasBeenSpun ? '✓ Yes' : '✗ No';
+                const isMatched = s.hasSpun && s.hasBeenSpun;
+                const statusBadge = isMatched 
+                    ? '<span class="status-badge status-yes">✓ Matched</span>'
+                    : '<span class="status-badge status-no">✗ Not Matched</span>';
+                const nameSpun = s.spinResult || 'N/A';
+
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${s.name}</td>
+                    <td>${s.department}</td>
+                    <td>${formatGroup(s.group)}</td>
+                    <td>${nameSpun}</td>
+                    <td>${hasSpun}</td>
+                    <td>${hasBeenSpun}</td>
+                    <td>${statusBadge}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        async function resetBeenSpun() {
+            if (!confirm('Are you sure? This will reset all "Has Been Spun" status to unmatched for testing purposes.')) {
+                return;
+            }
+
+            const resetBtn = document.getElementById('resetBtn');
+            resetBtn.disabled = true;
+            resetBtn.textContent = '⏳ Resetting...';
+
+            try {
+                const response = await fetch(`${API_URL}/admin/reset-been-spun`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    alert('✅ Reset complete! All staff are now showing as unmatched.');
+                    resetBtn.disabled = false;
+                    resetBtn.textContent = '🔄 Reset for Testing';
+                    // Reload validation data
+                    loadValidationData();
+                } else {
+                    alert('❌ Error: ' + data.message);
+                    resetBtn.disabled = false;
+                    resetBtn.textContent = '🔄 Reset for Testing';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('❌ Connection error: ' + error.message);
+                resetBtn.disabled = false;
+                resetBtn.textContent = '🔄 Reset for Testing';
+            }
+        }
+
+        function formatGroup(group) {
+            if (!group) return 'N/A';
+            const groupMap = {
+                'dairies': 'Dairies Plant',
+                'swan': 'Swan Plant',
+                'snacks1': 'Snacks Plant',
+                'snacks2': 'Snacks Plant'
+            };
+            return groupMap[group] || group;
+        }
+    </script>
+</body>
+</html>

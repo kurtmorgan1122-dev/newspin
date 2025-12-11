@@ -384,6 +384,35 @@
 <body class="remind-me-page">
     <!-- Main Container -->
     <div class="remind-me-container">
+            <!-- Info / Purpose Popup (similar behavior to spinner how-to) -->
+            <div id="remindHowtoOverlay" class="howto-overlay">
+                <div class="howto-card">
+                    <button id="remindHowtoClose" class="howto-close" aria-label="Close how-to">✕</button>
+                    <div class="howto-decor">
+                        <!-- small decorative inline SVGs to match spinner page -->
+                        <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                            <circle cx="32" cy="32" r="30" fill="#ffeded" />
+                            <path d="M20 30c0-6 6-10 12-10s12 4 12 10" fill="#fff" />
+                            <path d="M18 28c0 8 14 12 14 12s14-4 14-12" fill="#c41e3a" />
+                        </svg>
+                        <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                            <rect x="28" y="44" width="8" height="12" fill="#8b5a2b" />
+                            <path d="M8 38 L32 10 L56 38 Z" fill="#0b7a34" />
+                        </svg>
+                        <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                            <rect x="8" y="22" width="48" height="30" rx="4" fill="#ffd700" />
+                            <path d="M32 22 v30" stroke="#c41e3a" stroke-width="4" />
+                        </svg>
+                    </div>
+                    <h2>Important note about matching</h2>
+                    <p>We observed that many people who <strong>spun</strong> did not have anyone who spun them. This might definitely create a gap where some staff will give a gift but will not receive one in return.</p>
+                    <p>To fix this, we performed a <strong>100% random re-matching</strong> among affected participants.</p>
+                    <p>This ensures every participant now has a guaranteed match and will both give and receive a gift.</p>
+                    <p>&nbsp;</p>
+                    <p><strong>We currently have 148 participants (and counting...) who have spun across all plants and we love it 😊</strong></p>
+                    <p>Thank you for your understanding and cooperation as we continue to share joy and celebrate in the true spirit of the season. ✨🎁🎄</p>
+                </div>
+            </div>
         <div class="remind-me-card">
             <h1 class="remind-me-title">🎄 UFL Christmas Secret Santa - Remind Me 🎅</h1>
             <p class="remind-me-subtitle">Enter your Staff ID to recall your Secret Santa match!</p>
@@ -475,6 +504,24 @@
                     handleRemind();
                 }
             });
+
+            // How-to / Info modal close handling (RemindMe page)
+            const remindHowtoOverlay = document.getElementById('remindHowtoOverlay');
+            const remindHowtoClose = document.getElementById('remindHowtoClose');
+            if (remindHowtoClose) {
+                remindHowtoClose.addEventListener('click', () => {
+                    if (remindHowtoOverlay) remindHowtoOverlay.style.display = 'none';
+                });
+            }
+
+            // Clicking outside the card closes the overlay
+            if (remindHowtoOverlay) {
+                remindHowtoOverlay.addEventListener('click', (e) => {
+                    if (e.target === remindHowtoOverlay) {
+                        remindHowtoOverlay.style.display = 'none';
+                    }
+                });
+            }
         });
 
         async function handleRemind() {
