@@ -62,7 +62,13 @@ async function loadStaffTable(page = 1, search = '') {
                 data.staff.forEach((staff, index) => {
                     const row = document.createElement('tr');
                     const serialNumber = (currentPage - 1) * 25 + index + 1;
-                    
+
+                    // Prepare reset button attributes: enable and wire onclick only when there is a valid spun name
+                    const safeSpunName = (staff.spinResult || '').replace(/'/g, "\\'");
+                    const resetBtnAttrs = (staff.spinResult && staff.spinResult !== 'N/A')
+                        ? `onclick="resetSpin('${staff._id}', '${safeSpunName}')"`
+                        : `disabled style="opacity: 0.5; cursor: not-allowed;"`;
+
                     row.innerHTML = `
                         <td>${serialNumber}</td>
                         <td>${staff.name}</td>
@@ -78,7 +84,7 @@ async function loadStaffTable(page = 1, search = '') {
                             </select>
                         </td>
                         <td>
-                            <button class="btn-reset" disabled style="opacity: 0.5; cursor: not-allowed;">
+                            <button class="btn-reset" ${resetBtnAttrs}>
                                 Reset
                             </button>
                         </td>
