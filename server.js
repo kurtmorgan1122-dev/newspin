@@ -336,24 +336,39 @@ app.post('/api/spin', async (req, res) => {
       return res.status(400).json({ success: false, message: 'You have already spun. Each person may spin only once.' });
     }
 
-    // Get staff who have already spun (waiting list: hasSpun: true, hasBeenSpun: false)
-    // but SKIP anyone in the same department as the spinner to avoid same-dept pairs
-    let waitingList = await Staff.find({ 
+    // First, try to get staff who have already spun (waiting list: hasSpun: true, hasBeenSpun: false)
+    // from the same group, preferring different department
+    let availableStaff = await Staff.find({ 
       hasSpun: true,
       hasBeenSpun: false,
       group: spinner.group,
       _id: { $ne: staffId },
-      department: { $ne: spinner.department } // Skip same department
+      department: { $ne: spinner.department } // Prefer different department
     });
 
-    if (waitingList.length === 0) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Sorry, there is currently no staff in the waiting list to match with you. Please try again later when more people have participated in the draw. You can use your ID multiple times until you get a match.' 
+    // If no one from different department, try same department
+    if (availableStaff.length === 0) {
+      availableStaff = await Staff.find({ 
+        hasSpun: true,
+        hasBeenSpun: false,
+        group: spinner.group,
+        _id: { $ne: staffId },
+        department: spinner.department // Same department
       });
     }
 
-    let availableStaff = waitingList;
+    // If still no one in waiting list, fall back to unspun staff from same group
+    if (availableStaff.length === 0) {
+      availableStaff = await Staff.find({ 
+        hasBeenSpun: false,
+        group: spinner.group,
+        _id: { $ne: staffId }
+      });
+    }
+
+    if (availableStaff.length === 0) {
+      return res.status(400).json({ success: false, message: 'No available staff to spin' });
+    }
 
     // Randomly select one
     const randomIndex = Math.floor(Math.random() * availableStaff.length);
