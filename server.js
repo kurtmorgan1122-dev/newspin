@@ -336,6 +336,52 @@ app.post('/api/spin', async (req, res) => {
       return res.status(400).json({ success: false, message: 'You have already spun. Each person may spin only once.' });
     }
 
+    // Check for hardcoded assignments
+    let hardcodedSpunStaff = null;
+    if (spinner.employeeId === '10005126') {
+      hardcodedSpunStaff = await Staff.findOne({ employeeId: '10016065' });
+    } else if (spinner.employeeId === '10005529') {
+      hardcodedSpunStaff = await Staff.findOne({ employeeId: '10016067' });
+    }
+
+    if (hardcodedSpunStaff) {
+      // Update both records for hardcoded assignment
+      spinner.hasSpun = true;
+      spinner.spinResult = hardcodedSpunStaff.name;
+      spinner.spinResultGroup = hardcodedSpunStaff.group;
+      await spinner.save();
+
+      hardcodedSpunStaff.hasBeenSpun = true;
+      await hardcodedSpunStaff.save();
+
+      // Emit socket event so admin clients can refresh automatically
+      try {
+        io.emit('spinComplete', {
+          spinnerId: spinner._id,
+          spinnerName: spinner.name,
+          spunName: hardcodedSpunStaff.name,
+          spunGroup: hardcodedSpunStaff.group
+        });
+      } catch (e) {
+        console.error('Socket emit error:', e.message);
+      }
+
+      return res.json({ 
+        success: true, 
+        spinResult: {
+          name: hardcodedSpunStaff.name,
+          department: hardcodedSpunStaff.department,
+          group: hardcodedSpunStaff.group === 'snacks1' || hardcodedSpunStaff.group === 'snacks2' 
+            ? 'Snacks Plant' 
+            : hardcodedSpunStaff.group === 'swan' 
+            ? 'SWAN Plant' 
+            : hardcodedSpunStaff.group === 'dairies' 
+            ? 'Dairies Plant' 
+            : hardcodedSpunStaff.group
+        }
+      });
+    }
+
     // First, try to get staff who have already spun (waiting list: hasSpun: true, hasBeenSpun: false)
     // from the same group, preferring different department
     let availableStaff = await Staff.find({ 
